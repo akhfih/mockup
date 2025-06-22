@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <nav className="
-            supports:backdrop-blur:bg-background/60
+            supports:backdrop-blur:bg-background/50
             fixed left-0 right-0 top-0 z-20
             border-b bg-background/50 backdrop-blur
             w-full flex justify-between py-2.5 px-5">
