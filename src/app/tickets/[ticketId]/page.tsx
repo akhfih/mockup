@@ -13,7 +13,7 @@ type TicketsPageProps = {
 
 const TicketsPage = async ({ params }: TicketsPageProps) => {
     const { ticketId } = await params
-    const ticket = await initialTickets.find((ticket) => ticket.id.toString() === ticketId);
+    const ticket = initialTickets.find((ticket) => ticket.id === ticketId);
 
     if (!ticket) {
         return (
