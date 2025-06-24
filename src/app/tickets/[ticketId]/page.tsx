@@ -7,15 +7,15 @@ import { getTicket } from "@/features/ticket/queries/get-ticket";
 import { ticketsPath } from "@/paths";
 
 
-type TicketsPageProps = {
-    params: {
-        ticketId: string;
-    };
-};
+// type TicketsPageProps = {
+//     params: Promise<{
+//         ticketId: string;
+//     }>;
+// };
 
-const TicketsPage = async ({ params }: TicketsPageProps) => {
-    const { ticketId } = await params;
-    const ticket = await getTicket(ticketId);
+const TicketsPage = async (props: { params: Promise<{ ticketId: string }> }) => {
+    const params = await props.params;
+    const ticket = await getTicket(params.ticketId);
 
     if (!ticket) {
         return (
@@ -29,7 +29,7 @@ const TicketsPage = async ({ params }: TicketsPageProps) => {
                     } />
                 <Placeholder
                     label="Ticket not found"
-                    />
+                />
             </div>
         )
 
