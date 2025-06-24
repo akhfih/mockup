@@ -1,4 +1,5 @@
 import Link from "next/link";
+import React from "react";
 import { Placeholder } from "@/components/placeholder";
 import { Button } from "@/components/ui/button";
 import { initialTickets } from "@/data";
@@ -12,9 +13,9 @@ type TicketsPageProps = {
     };
 };
 
-const TicketsPage = ({ params }: TicketsPageProps) => {
-    const { ticketId } = params
-    const ticket = initialTickets.find((ticket) => ticket.id.toString() === ticketId);
+const TicketsPage = async ({ params }: TicketsPageProps) => {
+    const {ticketId} = await params;
+    const ticket = initialTickets.find((ticket) => ticket.id === ticketId);
 
     if (!ticket) {
         return (
