@@ -23,6 +23,9 @@ const eslintConfig = [
       "simple-import-sort/exports": "error",
     },
   },
+  {
+    ignores: ["src/generated/prisma/**"],
+  },
 ];
 
 export default eslintConfig;
