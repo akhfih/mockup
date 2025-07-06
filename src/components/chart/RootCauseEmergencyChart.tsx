@@ -4,7 +4,7 @@ import ReactECharts from 'echarts-for-react';
 
 const RootCauseEmergencyChart = () => {
     const option = {
-        title: { text: 'Root Cause Emergency', left: 'center' },
+        title: { text: 'Root Cause Emergency', left: 'left' },
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
         legend: { top: 25, data: ['3rd Party', 'Transmission'] },
         grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },

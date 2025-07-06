@@ -257,7 +257,10 @@ const HomePage = () => {
       </section>
 
 
+
     </div>
+
+
   );
 }
 
