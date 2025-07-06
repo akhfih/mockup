@@ -24,7 +24,7 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ["src/generated/prisma/**"],
+    ignores: ["src/generated/prisma/**", "src/components/ui/**",],
   },
 ];
 
