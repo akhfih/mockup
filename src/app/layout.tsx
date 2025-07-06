@@ -1,9 +1,30 @@
 import "./globals.css";
+import { LucideLayoutDashboard } from "lucide-react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 
+// Menu items.
+const items = [
+  {
+    title: "Dashboard 1",
+    url: "#",
+    icon: LucideLayoutDashboard,
+  },
+  {
+    title: "Dashboard 2",
+    url: "#",
+    icon: LucideLayoutDashboard,
+  },
+  {
+    title: "Dashboard 3",
+    url: "#",
+    icon: LucideLayoutDashboard,
+  },
+
+]
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +37,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Basic Next App",
-  description: "A basic Next.js application",
+  title: "Dashboard",
+  description: "Dashboard application",
 };
 
 export default function RootLayout({
@@ -31,16 +52,44 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider>
-          <Header />
-          <main
-            className="
+          <SidebarProvider defaultOpen={false}>
+
+            <Sidebar>
+              <SidebarContent>
+                <SidebarGroup>
+                  <SidebarGroupLabel>Dashboards</SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {items.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <a href={item.url}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </a>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </SidebarContent>
+            </Sidebar>
+
+
+            <main
+              className="
               min-h-screen flex-1
               overflow-y-auto overflow-x-hidden
-              py-24 px-8
+          
               bg-secondary/20
               flex flex-col">
-            {children}
-          </main>
+              <Header />
+              {children}
+            </main>
+
+          </SidebarProvider>
+
         </ThemeProvider>
       </body>
     </html>
