@@ -9,21 +9,15 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGrou
 // Menu items.
 const items = [
   {
-    title: "Dashboard 1",
-    url: "#",
+    title: "Dashboard",
+    url: "/",
     icon: LucideLayoutDashboard,
   },
   {
-    title: "Dashboard 2",
-    url: "#",
+    title: "Upload Data",
+    url: "/data",
     icon: LucideLayoutDashboard,
   },
-  {
-    title: "Dashboard 3",
-    url: "#",
-    icon: LucideLayoutDashboard,
-  },
-
 ]
 
 const geistSans = Geist({
@@ -53,7 +47,6 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <SidebarProvider defaultOpen={false}>
-
             <Sidebar>
               <SidebarContent>
                 <SidebarGroup>
@@ -75,21 +68,16 @@ export default function RootLayout({
                 </SidebarGroup>
               </SidebarContent>
             </Sidebar>
-
-
             <main
               className="
               min-h-screen flex-1
               overflow-y-auto overflow-x-hidden
-          
               bg-secondary/20
               flex flex-col">
               <Header />
               {children}
             </main>
-
           </SidebarProvider>
-
         </ThemeProvider>
       </body>
     </html>
