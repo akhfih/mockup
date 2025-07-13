@@ -16,7 +16,7 @@ const Header = () => {
 
                 <div className="text-center">
                     <h1 className="text-lg font-semibold tracking-wide">
-                        Dashboard
+                        Dashboard TT
                     </h1>
                 </div>
 

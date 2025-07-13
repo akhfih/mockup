@@ -5,7 +5,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
-export function FileUploader() {
+interface FileUploaderProps {
+    onUploadSuccess?: () => void;
+}
+
+export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
     const [file, setFile] = useState<File | null>(null)
     const [progress, setProgress] = useState(0)
     const [uploading, setUploading] = useState(false)
@@ -37,6 +41,14 @@ export function FileUploader() {
                 },
             })
             alert("Upload sukses!")
+            
+            // Call the callback to reload the table
+            if (onUploadSuccess) {
+                onUploadSuccess()
+            }
+            
+            // Reset file input
+            setFile(null)
         } catch (err) {
             alert("Upload gagal.")
             console.error(err)
@@ -55,14 +67,14 @@ export function FileUploader() {
                 {file ? <p>{file.name}</p> : <p>Tarik file ke sini atau pilih manual</p>}
             </div> */}
 
-            <div className="flex items-center">
+            <div className="flex items-center justify-center">
                 <input
                     type="file"
                     accept=".xlsx,.xls"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
                     className="text-sm"
                 />
-                <Button onClick={handleUpload} disabled={!file || uploading}>
+                <Button onClick={handleUpload} disabled={!file || uploading} className="text-white">
                     {uploading ? "Mengunggah..." : "Upload"}
                 </Button>
             </div>

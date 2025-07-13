@@ -1,8 +1,8 @@
-// import Link from "next/link";
-// import { ticketsPath } from "@/paths";
-
+'use client';
 
 import type { EChartsOption } from 'echarts';
+import { Loader2 } from "lucide-react";
+import { useEffect, useState } from 'react';
 import MTTETrendChart from "@/components/chart/MTTETrendChart";
 // import MTTRTrendChart from "@/components/chart/MTTRTrendChart";
 import TTTrendChart from "@/components/chart/TTTrendChart";
@@ -15,7 +15,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
+import { dashboardService } from '@/services/dashboardService';
+import { DashboardResponse } from '@/types/dashboard';
 
 const optionBar: EChartsOption = {
   title: {
@@ -115,6 +117,51 @@ const optionBar: EChartsOption = {
 }
 
 const HomePage = () => {
+  const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getDashboardData();
+        setDashboardData(data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+        console.error('Dashboard data fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-30 w-30 animate-spin text-white" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-500 text-xl">{error}</div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white text-xl">No data available</div>
+      </div>
+    );
+  }
   return (
     <div className="space-y-6 p-6">
       {/* Site Down Section */}
@@ -124,7 +171,7 @@ const HomePage = () => {
           <div className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">
             <span>Enterprise</span>
           </div>
-          <Select>
+          {/* <Select>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
@@ -133,7 +180,7 @@ const HomePage = () => {
               <SelectItem value="Weekly">Weekly</SelectItem>
               <SelectItem value="Monthly">Monthly</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
             {/* Kiri */}
             <div className="space-y-4 ">
@@ -146,32 +193,32 @@ const HomePage = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">32</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.total}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.below_1_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">323</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_1_to_4}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">16322300</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_4_to_8}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_8_to_24}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.above_24_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                 </div>
@@ -182,7 +229,7 @@ const HomePage = () => {
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] text-white rounded-lg shadow-md border border-[#164396] overflow-hidden">
                 {/* Header */}
-                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3">
+                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3 shadow-xl/30">
                   Others
                 </div>
 
@@ -190,32 +237,32 @@ const HomePage = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">32</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.total}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.below_1_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">323</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_1_to_4}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">16322300</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_4_to_8}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_8_to_24}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.above_24_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                 </div>
@@ -226,10 +273,10 @@ const HomePage = () => {
 
         {/* Kanan - Partnership */}
         <section className="space-y-4 rounded-lg shadow-md p-2 pt-0 bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396]">
-          <div className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto">
+          <div className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">
             <span>Partnership</span>
           </div>
-          <Select>
+          {/* <Select>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
@@ -237,46 +284,46 @@ const HomePage = () => {
               <SelectItem value="dark">Open</SelectItem>
               <SelectItem value="system">Close</SelectItem>
             </SelectContent>
-          </Select>
+          </Select> */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* Kiri */}
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] text-white rounded-lg shadow-md border border-[#164396] overflow-hidden">
                 {/* Header */}
-                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3">
+                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3 shadow-xl/30">
                   OOS
                 </div>
                 {/* Isi card */}
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">32</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.total}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.below_1_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">323</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_1_to_4}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">16322300</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_4_to_8}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_8_to_24}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.above_24_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                 </div>
@@ -287,7 +334,7 @@ const HomePage = () => {
             <div className="space-y-4">
               <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] text-white rounded-lg shadow-md border border-[#164396] overflow-hidden">
                 {/* Header */}
-                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3">
+                <div className="bg-[#164396] text-white text-xl font-semibold text-center py-1 mx-10 rounded-b-2xl mb-3 shadow-xl/30">
                   Others
                 </div>
 
@@ -295,32 +342,32 @@ const HomePage = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">32</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.total}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">45</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.below_1_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">323</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_1_to_4}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">16322300</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_4_to_8}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_8_to_24}</div>
                     <div className="text-xs">Site</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">322</div>
+                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.above_24_hour}</div>
                     <div className="text-xs">Site</div>
                   </div>
                 </div>
