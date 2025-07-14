@@ -1,5 +1,5 @@
 
-import { ThemeSwitcher } from "./theme/theme-switcher";
+// import { ThemeSwitcher } from "./theme/theme-switcher";
 import { SidebarTrigger } from "./ui/sidebar";
 
 const Header = () => {
@@ -21,12 +21,12 @@ const Header = () => {
                 </div>
 
                 <div className="flex justify-end items-center gap-x-2">
-                    <div className="mr-2">
-                        Last Updated Time
+                    <div className="mr-2 p-5">
+                        {/* Last Updated Time
                         <br />
-                        <span className="font-bold">7/2/2025 17:00</span>
+                        <span className="font-bold">7/2/2025 17:00</span> */}
                     </div>
-                    <ThemeSwitcher />
+                    {/* <ThemeSwitcher /> */}
                 </div>
             </nav>
 

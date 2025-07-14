@@ -41,12 +41,12 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
                 },
             })
             alert("Upload sukses!")
-            
+
             // Call the callback to reload the table
             if (onUploadSuccess) {
                 onUploadSuccess()
             }
-            
+
             // Reset file input
             setFile(null)
         } catch (err) {
@@ -74,7 +74,7 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
                     className="text-sm"
                 />
-                <Button onClick={handleUpload} disabled={!file || uploading} className="text-white">
+                <Button onClick={handleUpload} disabled={!file || uploading} className="text-white bg-[#164396]">
                     {uploading ? "Mengunggah..." : "Upload"}
                 </Button>
             </div>
