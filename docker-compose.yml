@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Jika ingin override env, bisa tambahkan di sini
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:8000
+    # Jika ingin gunakan file env:
+    # env_file:
+    #   - .env.local
+    restart: unless-stopped

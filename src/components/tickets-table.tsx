@@ -1,6 +1,7 @@
 "use client"
 
 import axios from "axios"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 import { Loader2 } from "lucide-react";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -100,7 +101,7 @@ const TicketsTable = forwardRef<TicketsTableRef>((props, ref) => {
         try {
             setLoading(true)
             const currentPage = resetPage ? 1 : page
-            const response = await axios.get('http://127.0.0.1:8000/tickets', {
+            const response = await axios.get(`${API_BASE_URL}/tickets`, {
                 params: {
                     page: currentPage,
                     page_size: meta.page_size,
@@ -341,102 +342,102 @@ const TicketsTable = forwardRef<TicketsTableRef>((props, ref) => {
                     </div>
                 )}
                 <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
-                  <div className="w-full overflow-x-auto">
-                    <Table className="min-w-[3000px]">
-                        <TableHeader className="bg-gray-800">
-                            <TableRow>
-                                <TableHead className="min-w-[120px]">Trouble Ticket</TableHead>
-                                <TableHead className="min-w-[120px]">Description</TableHead>
-                                <TableHead className="min-w-[120px]">Start</TableHead>
-                                <TableHead className="min-w-[120px]">End</TableHead>
-                                <TableHead className="min-w-[120px]">Malfunction Start</TableHead>
-                                <TableHead className="min-w-[120px]">Malfunction End</TableHead>
-                                <TableHead className="min-w-[120px]">Status</TableHead>
-                                <TableHead className="min-w-[120px]">Parking</TableHead>
-                                <TableHead className="min-w-[120px]">Total Parking</TableHead>
-                                <TableHead className="min-w-[120px]">Suspend</TableHead>
-                                <TableHead className="min-w-[120px]">Total Suspend</TableHead>
-                                <TableHead className="min-w-[120px]">MTTR ALL</TableHead>
-                                <TableHead className="min-w-[120px]">MTTR PT. HS</TableHead>
-                                <TableHead className="min-w-[120px]">Root Cause</TableHead>
-                                <TableHead className="min-w-[120px]">RFO</TableHead>
-                                <TableHead className="min-w-[120px]">Link ID</TableHead>
-                                <TableHead className="min-w-[120px]">Site ID</TableHead>
-                                <TableHead className="min-w-[120px]">Region</TableHead>
-                                <TableHead className="min-w-[120px]">Week</TableHead>
-                                <TableHead className="min-w-[120px]">Priority</TableHead>
-                                <TableHead className="min-w-[120px]">Region New</TableHead>
-                                <TableHead className="min-w-[120px]">SLA New</TableHead>
-                                <TableHead className="min-w-[120px]">SLA 2H_2</TableHead>
-                                <TableHead className="min-w-[120px]">SLA 4H_2</TableHead>
-                                <TableHead className="min-w-[120px]">Z</TableHead>
-                                <TableHead className="min-w-[120px]">ROH</TableHead>
-                                <TableHead className="min-w-[120px]">Request MEET</TableHead>
-                                <TableHead className="min-w-[120px]">Month</TableHead>
-                                <TableHead className="min-w-[120px]">Related ISMT</TableHead>
-                                <TableHead className="min-w-[120px]">Date</TableHead>
-                                <TableHead className="min-w-[120px]">Cause Code</TableHead>
-                                <TableHead className="min-w-[120px]">Reason</TableHead>
-                                <TableHead className="min-w-[120px]">RCA</TableHead>
-                                <TableHead className="min-w-[120px]">Customer Name</TableHead>
-                                <TableHead className="min-w-[120px]">SLA BEFORE</TableHead>
-                                <TableHead className="min-w-[120px]">ISMT MEET ALL</TableHead>
-                                <TableHead className="min-w-[120px]">Link Type</TableHead>
-                                <TableHead className="min-w-[120px]">Related TT Partnerr</TableHead>
-                                <TableHead className="min-w-[120px]">Class</TableHead>
-                                <TableHead className="min-w-[120px]">Problem Category</TableHead>
-                                <TableHead className="min-w-[120px]">Takeout</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {tickets.map(ticket => (
-                                <TableRow key={ticket.id}>
-                                    <TableCell>{ticket.trouble_ticket}</TableCell>
-                                    <TableCell>{ticket.description}</TableCell>
-                                    <TableCell>{ticket.start_tt.replace("T", " ")}</TableCell>
-                                    <TableCell>{ticket.end_tt ? ticket.end_tt.replace("T", " ") : "-"}</TableCell>
-                                    <TableCell>{ticket.malfunction_start ? ticket.malfunction_start.replace("T", " ") : "-"}</TableCell>
-                                    <TableCell>{ticket.malfunction_end ? ticket.malfunction_end.replace("T", " ") : "-"}</TableCell>
-                                    <TableCell>{ticket.status ? ticket.status.replace("T", " ") : "-"}</TableCell>
-                                    <TableCell>{ticket.parking ? ticket.parking.replace("T", " ") : "-"}</TableCell>
-                                    <TableCell>{ticket.total_parking}</TableCell>
-                                    <TableCell>{ticket.suspend ? ticket.suspend : "-"}</TableCell>
-                                    <TableCell>{ticket.total_suspend ? ticket.suspend : "-"}</TableCell>
-                                    <TableCell>{ticket.mttr_all ? ticket.mttr_all : "-"}</TableCell>
-                                    <TableCell>{ticket.mttr_pt_hs ? ticket.mttr_pt_hs : "-"}</TableCell>
-                                    <TableCell>{ticket.root_cause ? ticket.root_cause : "-"}</TableCell>
-                                    <TableCell>{ticket.rfo ? ticket.rfo : "-"}</TableCell>
-                                    <TableCell>{ticket.link_id ? ticket.link_id : "-"}</TableCell>
-                                    <TableCell>{ticket.site_id ? ticket.site_id : "-"}</TableCell>
-                                    <TableCell>{ticket.region ? ticket.region : "-"}</TableCell>
-                                    <TableCell>{ticket.week ? ticket.week : "-"}</TableCell>
-                                    <TableCell>{ticket.priority ? ticket.priority : "-"}</TableCell>
-                                    <TableCell>{ticket.region_new ? ticket.region_new : "-"}</TableCell>
-                                    <TableCell>{ticket.sla_new ? ticket.sla_new : "-"}</TableCell>
-                                    <TableCell>{ticket.sla_2h_2 ? ticket.sla_2h_2 : "-"}</TableCell>
-                                    <TableCell>{ticket.sla_4h_2 ? ticket.sla_4h_2 : "-"}</TableCell>
-                                    <TableCell>{ticket.z ? ticket.z : "-"}</TableCell>
-                                    <TableCell>{ticket.roh ? ticket.roh : "-"}</TableCell>
-                                    <TableCell>{ticket.request_meet ? ticket.request_meet : "-"}</TableCell>
-                                    <TableCell>{ticket.month ? ticket.month : "-"}</TableCell>
-                                    <TableCell>{ticket.related_ismt ? ticket.related_ismt : "-"}</TableCell>
-                                    <TableCell>{ticket.date ? ticket.date : "-"}</TableCell>
-                                    <TableCell>{ticket.cause_code ? ticket.cause_code : "-"}</TableCell>
-                                    <TableCell>{ticket.reason ? ticket.reason : "-"}</TableCell>
-                                    <TableCell>{ticket.rca ? ticket.rca : "-"}</TableCell>
-                                    <TableCell>{ticket.customer_name ? ticket.customer_name : "-"}</TableCell>
-                                    <TableCell>{ticket.sla_before ? ticket.sla_before : "-"}</TableCell>
-                                    <TableCell>{ticket.ismt_meet_all ? ticket.ismt_meet_all : "-"}</TableCell>
-                                    <TableCell>{ticket.link_type ? ticket.link_type : "-"}</TableCell>
-                                    <TableCell>{ticket.related_tt_partner ? ticket.related_tt_partner : "-"}</TableCell>
-                                    <TableCell>{ticket.class_ ? ticket.class_ : "-"}</TableCell>
-                                    <TableCell>{ticket.problem_category ? ticket.problem_category : "-"}</TableCell>
-                                    <TableCell>{ticket.takeout ? ticket.takeout : "-"}</TableCell>
+                    <div className="w-full overflow-x-auto">
+                        <Table className="min-w-[3000px]">
+                            <TableHeader className="bg-gray-800">
+                                <TableRow>
+                                    <TableHead className="min-w-[120px]">Trouble Ticket</TableHead>
+                                    <TableHead className="min-w-[120px]">Description</TableHead>
+                                    <TableHead className="min-w-[120px]">Start</TableHead>
+                                    <TableHead className="min-w-[120px]">End</TableHead>
+                                    <TableHead className="min-w-[120px]">Malfunction Start</TableHead>
+                                    <TableHead className="min-w-[120px]">Malfunction End</TableHead>
+                                    <TableHead className="min-w-[120px]">Status</TableHead>
+                                    <TableHead className="min-w-[120px]">Parking</TableHead>
+                                    <TableHead className="min-w-[120px]">Total Parking</TableHead>
+                                    <TableHead className="min-w-[120px]">Suspend</TableHead>
+                                    <TableHead className="min-w-[120px]">Total Suspend</TableHead>
+                                    <TableHead className="min-w-[120px]">MTTR ALL</TableHead>
+                                    <TableHead className="min-w-[120px]">MTTR PT. HS</TableHead>
+                                    <TableHead className="min-w-[120px]">Root Cause</TableHead>
+                                    <TableHead className="min-w-[120px]">RFO</TableHead>
+                                    <TableHead className="min-w-[120px]">Link ID</TableHead>
+                                    <TableHead className="min-w-[120px]">Site ID</TableHead>
+                                    <TableHead className="min-w-[120px]">Region</TableHead>
+                                    <TableHead className="min-w-[120px]">Week</TableHead>
+                                    <TableHead className="min-w-[120px]">Priority</TableHead>
+                                    <TableHead className="min-w-[120px]">Region New</TableHead>
+                                    <TableHead className="min-w-[120px]">SLA New</TableHead>
+                                    <TableHead className="min-w-[120px]">SLA 2H_2</TableHead>
+                                    <TableHead className="min-w-[120px]">SLA 4H_2</TableHead>
+                                    <TableHead className="min-w-[120px]">Z</TableHead>
+                                    <TableHead className="min-w-[120px]">ROH</TableHead>
+                                    <TableHead className="min-w-[120px]">Request MEET</TableHead>
+                                    <TableHead className="min-w-[120px]">Month</TableHead>
+                                    <TableHead className="min-w-[120px]">Related ISMT</TableHead>
+                                    <TableHead className="min-w-[120px]">Date</TableHead>
+                                    <TableHead className="min-w-[120px]">Cause Code</TableHead>
+                                    <TableHead className="min-w-[120px]">Reason</TableHead>
+                                    <TableHead className="min-w-[120px]">RCA</TableHead>
+                                    <TableHead className="min-w-[120px]">Customer Name</TableHead>
+                                    <TableHead className="min-w-[120px]">SLA BEFORE</TableHead>
+                                    <TableHead className="min-w-[120px]">ISMT MEET ALL</TableHead>
+                                    <TableHead className="min-w-[120px]">Link Type</TableHead>
+                                    <TableHead className="min-w-[120px]">Related TT Partnerr</TableHead>
+                                    <TableHead className="min-w-[120px]">Class</TableHead>
+                                    <TableHead className="min-w-[120px]">Problem Category</TableHead>
+                                    <TableHead className="min-w-[120px]">Takeout</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                  </div>
+                            </TableHeader>
+                            <TableBody>
+                                {tickets.map(ticket => (
+                                    <TableRow key={ticket.id}>
+                                        <TableCell>{ticket.trouble_ticket}</TableCell>
+                                        <TableCell>{ticket.description}</TableCell>
+                                        <TableCell>{ticket.start_tt.replace("T", " ")}</TableCell>
+                                        <TableCell>{ticket.end_tt ? ticket.end_tt.replace("T", " ") : "-"}</TableCell>
+                                        <TableCell>{ticket.malfunction_start ? ticket.malfunction_start.replace("T", " ") : "-"}</TableCell>
+                                        <TableCell>{ticket.malfunction_end ? ticket.malfunction_end.replace("T", " ") : "-"}</TableCell>
+                                        <TableCell>{ticket.status ? ticket.status.replace("T", " ") : "-"}</TableCell>
+                                        <TableCell>{ticket.parking ? ticket.parking.replace("T", " ") : "-"}</TableCell>
+                                        <TableCell>{ticket.total_parking}</TableCell>
+                                        <TableCell>{ticket.suspend ? ticket.suspend : "-"}</TableCell>
+                                        <TableCell>{ticket.total_suspend ? ticket.suspend : "-"}</TableCell>
+                                        <TableCell>{ticket.mttr_all ? ticket.mttr_all : "-"}</TableCell>
+                                        <TableCell>{ticket.mttr_pt_hs ? ticket.mttr_pt_hs : "-"}</TableCell>
+                                        <TableCell>{ticket.root_cause ? ticket.root_cause : "-"}</TableCell>
+                                        <TableCell>{ticket.rfo ? ticket.rfo : "-"}</TableCell>
+                                        <TableCell>{ticket.link_id ? ticket.link_id : "-"}</TableCell>
+                                        <TableCell>{ticket.site_id ? ticket.site_id : "-"}</TableCell>
+                                        <TableCell>{ticket.region ? ticket.region : "-"}</TableCell>
+                                        <TableCell>{ticket.week ? ticket.week : "-"}</TableCell>
+                                        <TableCell>{ticket.priority ? ticket.priority : "-"}</TableCell>
+                                        <TableCell>{ticket.region_new ? ticket.region_new : "-"}</TableCell>
+                                        <TableCell>{ticket.sla_new ? ticket.sla_new : "-"}</TableCell>
+                                        <TableCell>{ticket.sla_2h_2 ? ticket.sla_2h_2 : "-"}</TableCell>
+                                        <TableCell>{ticket.sla_4h_2 ? ticket.sla_4h_2 : "-"}</TableCell>
+                                        <TableCell>{ticket.z ? ticket.z : "-"}</TableCell>
+                                        <TableCell>{ticket.roh ? ticket.roh : "-"}</TableCell>
+                                        <TableCell>{ticket.request_meet ? ticket.request_meet : "-"}</TableCell>
+                                        <TableCell>{ticket.month ? ticket.month : "-"}</TableCell>
+                                        <TableCell>{ticket.related_ismt ? ticket.related_ismt : "-"}</TableCell>
+                                        <TableCell>{ticket.date ? ticket.date : "-"}</TableCell>
+                                        <TableCell>{ticket.cause_code ? ticket.cause_code : "-"}</TableCell>
+                                        <TableCell>{ticket.reason ? ticket.reason : "-"}</TableCell>
+                                        <TableCell>{ticket.rca ? ticket.rca : "-"}</TableCell>
+                                        <TableCell>{ticket.customer_name ? ticket.customer_name : "-"}</TableCell>
+                                        <TableCell>{ticket.sla_before ? ticket.sla_before : "-"}</TableCell>
+                                        <TableCell>{ticket.ismt_meet_all ? ticket.ismt_meet_all : "-"}</TableCell>
+                                        <TableCell>{ticket.link_type ? ticket.link_type : "-"}</TableCell>
+                                        <TableCell>{ticket.related_tt_partner ? ticket.related_tt_partner : "-"}</TableCell>
+                                        <TableCell>{ticket.class_ ? ticket.class_ : "-"}</TableCell>
+                                        <TableCell>{ticket.problem_category ? ticket.problem_category : "-"}</TableCell>
+                                        <TableCell>{ticket.takeout ? ticket.takeout : "-"}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </div>
             </div>
 
