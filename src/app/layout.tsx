@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Header } from "@/components/header";
 // import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 // Menu items.
@@ -88,6 +89,7 @@ export default function RootLayout({
           )}
         </AuthProvider>
         {/* </ThemeProvider> */}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

@@ -460,7 +460,7 @@ const DashboardContent = () => {
               placeholder="Link ID"
               debounceTimeout={400}
             />
-            <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396] flex items-center justify-center">
+            <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396] flex items-center justify-center min-w-20">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
             </Button>
             {(!!customerName || !!linkId || !!createFromDate || !!createEndDate ||
@@ -762,7 +762,7 @@ const DashboardContent = () => {
               value={chartCustomerName ? { label: chartCustomerName, value: chartCustomerName } : null}
               onChange={(option) => setChartCustomerName(option ? option.value : '')}
               loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
-              placeholder="Filter by customer"
+              placeholder="Customer Name"
               debounceTimeout={400}
             />
 
@@ -811,10 +811,10 @@ const DashboardContent = () => {
                     additional: { page: page + 1 },
                   };
                 }}
-                placeholder="Filter by link ID"
+                placeholder="Link ID"
                 debounceTimeout={400}
               />
-              <Button onClick={handleChartFilterApply} disabled={chartFilterLoading} className="text-white bg-[#164396] flex items-center justify-center">
+              <Button onClick={handleChartFilterApply} disabled={chartFilterLoading} className="text-white bg-[#164396] flex items-center justify-center min-w-20">
                 {chartFilterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
               </Button>
               {(linkType !== 'all' || !!chartCustomerName || !!chartLinkId) && (

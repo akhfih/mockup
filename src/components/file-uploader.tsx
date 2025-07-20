@@ -2,9 +2,11 @@
 
 import axios from "axios"
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "./ui/input";
 
 interface FileUploaderProps {
     onUploadSuccess?: () => void;
@@ -12,6 +14,7 @@ interface FileUploaderProps {
 
 export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
     const [file, setFile] = useState<File | null>(null)
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [progress, setProgress] = useState(0)
     const [uploading, setUploading] = useState(false)
 
@@ -50,6 +53,9 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
 
             // Reset file input
             setFile(null)
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
         } catch (err) {
             alert("Upload gagal.")
             console.error(err)
@@ -68,21 +74,23 @@ export function FileUploader({ onUploadSuccess }: FileUploaderProps) {
                 {file ? <p>{file.name}</p> : <p>Tarik file ke sini atau pilih manual</p>}
             </div> */}
 
-
             <div className="flex items-center justify-center gap-2">
                 <div className="w-64">
-                    <label htmlFor="file-upload" className="block text-sm font-medium mb-1">Pilih file Excel</label>
-                    <input
-                        id="file-upload"
-                        type="file"
-                        accept=".xlsx,.xls"
-                        onChange={(e) => setFile(e.target.files?.[0] || null)}
-                        className="file-input file-input-bordered w-full"
-                    />
-                    {file && <div className="mt-1 text-xs text-gray-400">{file.name}</div>}
+                    <div className="grid w-full max-w-sm items-center gap-3">
+                        <Input
+                            id="picture"
+                            type="file"
+                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                            ref={fileInputRef}
+                        />
+                    </div>
+                    {/* {file && <div className="mt-1 text-xs text-gray-400">{file.name}</div>} */}
                 </div>
-                <Button onClick={handleUpload} disabled={!file || uploading} className="text-white bg-[#164396] h-10 mt-6">
+                {/* <Button onClick={handleUpload} disabled={!file || uploading} className="text-white bg-[#164396] h-10 mt-6">
                     {uploading ? "Mengunggah..." : "Upload"}
+                </Button> */}
+                <Button onClick={handleUpload} disabled={!file || uploading} className="text-white bg-[#164396] flex items-center justify-center min-w-20">
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
                 </Button>
             </div>
 
