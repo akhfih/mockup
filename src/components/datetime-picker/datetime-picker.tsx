@@ -352,9 +352,12 @@ export function DateTimePicker({
                             max={maxDate}
                         />
                     )}
-                    <div className="flex flex-row-reverse items-center justify-between">
+                    <div className="flex flex-row-reverse items-center justify-between gap-2">
                         <Button className="ms-2 h-7 px-2" onClick={onSubmit}>
                             Done
+                        </Button>
+                        <Button className="h-7 px-2" variant="outline" onClick={() => { onChange(undefined); setOpen(false); }}>
+                            Cancel
                         </Button>
                         {timezone && (
                             <div className="text-sm">

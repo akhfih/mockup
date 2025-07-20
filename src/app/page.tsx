@@ -41,6 +41,7 @@ const DashboardContent = () => {
   const [yearlyChartLoading, setYearlyChartLoading] = useState(false);
   const [weeklyChartLoading, setWeeklyChartLoading] = useState(false);
   const [dailyChartLoading, setDailyChartLoading] = useState(false);
+  const [chartFilterLoading, setChartFilterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createFromDate, setCreateFromDate] = useState<Date | undefined>(undefined);
   const [createFromTime, setCreateFromTime] = useState<Date | undefined>(() => {
@@ -55,20 +56,68 @@ const DashboardContent = () => {
     return now;
   });
 
+  const handleDashboardFilterReset = () => {
+    setCreateFromDate(undefined);
+    setCreateFromTime(() => {
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      return now;
+    });
+    setCreateEndDate(undefined);
+    setCreateEndTime(() => {
+      const now = new Date();
+      now.setHours(23, 59, 59, 0);
+      return now;
+    });
+    setCustomerName('');
+    setLinkId('');
+    // Langsung apply filter default
+    fetchDashboardData();
+  };
+
+  const handleChartFilterReset = () => {
+    setLinkType('all');
+    setChartCustomerName('');
+    setChartLinkId('');
+    // Langsung apply filter default chart
+    fetchYearlyChartData({
+      chart_type: 'yearly',
+      link_type: 'all',
+      years: years
+    });
+    fetchWeeklyChartData({
+      chart_type: 'weekly',
+      link_type: 'all',
+      weeks_back: [1, 2, 3, 4]
+    });
+    fetchDailyChartData({
+      chart_type: 'daily',
+      link_type: 'all',
+      days_back: [1, 7, 14]
+    });
+  };
+
   const years = getPreviousYears(4);
 
   // Dashboard filters
   // const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'all_time'>('all_time');
 
+
   // Chart filters (shared across all charts)
   const [linkType, setLinkType] = useState<'enterprise' | 'wholesale' | 'all'>('all');
+  // Dashboard filters
   const [customerName, setCustomerName] = useState('');
   const [linkId, setLinkId] = useState('');
-
-  // Reset linkId and force AsyncPaginateSelect to clear when customerName changes or is cleared
   useEffect(() => {
     setLinkId("");
   }, [customerName]);
+
+  // Chart-specific filters (independent from dashboard)
+  const [chartCustomerName, setChartCustomerName] = useState('');
+  const [chartLinkId, setChartLinkId] = useState('');
+  useEffect(() => {
+    setChartLinkId("");
+  }, [chartCustomerName]);
 
   const fetchDashboardData = async (filters?: DashboardFilters) => {
     try {
@@ -155,55 +204,65 @@ const DashboardContent = () => {
     console.log("from Time " + createFromTime + " to " + createEndTime);
   }, [dashboardData, createFromDate])
 
-  const handleDashboardFilterApply = () => {
-    const create_from = createFromDate
-      ? `${createFromDate.getFullYear()}-${String(createFromDate.getMonth() + 1).padStart(2, '0')}-${String(createFromDate.getDate()).padStart(2, '0')}T${createFromTime ? format(createFromTime, 'HH:mm:ss') : '00:00:00'
-      }`
-      : undefined;
+  const handleDashboardFilterApply = async () => {
+    setLoading(true);
+    try {
+      const create_from = createFromDate
+        ? `${createFromDate.getFullYear()}-${String(createFromDate.getMonth() + 1).padStart(2, '0')}-${String(createFromDate.getDate()).padStart(2, '0')}T${createFromTime ? format(createFromTime, 'HH:mm:ss') : '00:00:00'}`
+        : undefined;
 
-    const create_end = createEndDate
-      ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')}T${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'
-      }`
-      : undefined;
+      const create_end = createEndDate
+        ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')}T${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'}`
+        : undefined;
 
-    fetchDashboardData({
-      // time_filter: timeFilter,
-      create_from,
-      create_end,
-      ...(customerName && { customer_name: customerName }),
-      ...(linkId && { link_id: linkId })
-    });
+      await fetchDashboardData({
+        // time_filter: timeFilter,
+        create_from,
+        create_end,
+        ...(customerName && { customer_name: customerName }),
+        ...(linkId && { link_id: linkId })
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleChartFilterApply = () => {
+  const handleChartFilterApply = async () => {
+    setChartFilterLoading(true);
     const baseFilters = {
       link_type: linkType,
-      ...(customerName && { customer_name: customerName }),
-      ...(linkId && { link_id: linkId })
+      ...(chartCustomerName && { customer_name: chartCustomerName }),
+      ...(chartLinkId && { link_id: chartLinkId })
     };
-
-    // Fetch data for all three charts with their specific parameters
-    fetchYearlyChartData({
-      ...baseFilters,
-      chart_type: 'yearly',
-      years: years
-    });
-
-    fetchWeeklyChartData({
-      ...baseFilters,
-      chart_type: 'weekly',
-      weeks_back: [1, 2, 3, 4]
-    });
-
-    fetchDailyChartData({
-      ...baseFilters,
-      chart_type: 'daily',
-      days_back: [1, 7, 14]
-    });
+    try {
+      await Promise.all([
+        fetchYearlyChartData({
+          ...baseFilters,
+          chart_type: 'yearly',
+          years: years
+        }),
+        fetchWeeklyChartData({
+          ...baseFilters,
+          chart_type: 'weekly',
+          weeks_back: [1, 2, 3, 4]
+        }),
+        fetchDailyChartData({
+          ...baseFilters,
+          chart_type: 'daily',
+          days_back: [1, 7, 14]
+        })
+      ]);
+    } finally {
+      setChartFilterLoading(false);
+    }
   };
 
   // Generate ECharts option from API data (styled like TTTrendChart)
   const generateChartOption = (data: ChartResponse): EChartsOption => {
+    // Always show legend, even if data is empty
+    const legendData = data && data.series && data.series.length > 0
+      ? data.series.map(s => s.name)
+      : ["Data"];
     return {
       // backgroundColor: '#1f1f1f',
       title: {
@@ -220,9 +279,10 @@ const DashboardContent = () => {
         }
       },
       legend: {
+        show: true,
         bottom: 0,
         type: 'scroll',
-        data: data.series.map(s => s.name),
+        data: legendData,
       },
       grid: {
         left: '3%',
@@ -239,23 +299,25 @@ const DashboardContent = () => {
         type: 'value',
         name: 'Total       ',
       },
-      series: data.series.map(series => ({
-        name: series.name,
-        type: 'line',
-        data: series.data.map(d => d.value),
-        color: series.color,
-        smooth: false,
-      }))
+      series: (data.series && data.series.length > 0)
+        ? data.series.map(series => ({
+          name: series.name,
+          type: 'line',
+          data: series.data.map(d => d.value),
+          color: series.color,
+          smooth: false,
+        }))
+        : [{
+          name: 'Data',
+          type: 'line',
+          data: [],
+          color: '#888',
+          smooth: false,
+        }]
     };
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        {/* <Loader2 className="h-30 w-30 animate-spin text-white" /> */}
-      </div>
-    );
-  }
+  // Remove global loading screen so dashboard always renders
 
   if (error) {
     return (
@@ -265,7 +327,7 @@ const DashboardContent = () => {
     );
   }
 
-  if (!dashboardData) {
+  if (!dashboardData && !loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-white text-xl">No data available</div>
@@ -398,23 +460,18 @@ const DashboardContent = () => {
               placeholder="Link ID"
               debounceTimeout={400}
             />
-            <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396]">
-              {loading ? "Applying..." : "Apply"}
+            <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396] flex items-center justify-center">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
             </Button>
+            {(!!customerName || !!linkId || !!createFromDate || !!createEndDate ||
+              (createFromTime && (createFromTime.getHours() !== 0 || createFromTime.getMinutes() !== 0 || createFromTime.getSeconds() !== 0)) ||
+              (createEndTime && (createEndTime.getHours() !== 23 || createEndTime.getMinutes() !== 59 || createEndTime.getSeconds() !== 59))) && (
+                <Button onClick={handleDashboardFilterReset} type="button" variant="outline" className="text-white border-white">
+                  Reset
+                </Button>
+              )}
           </div>
         </div>
-
-
-
-
-
-
-
-
-
-
-
-
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
         {/* Kiri - Enterprise */}
@@ -434,32 +491,44 @@ const DashboardContent = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.total}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.total ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.below_1_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.mttr_breakdown.below_1_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_1_to_4}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.mttr_breakdown.hour_1_to_4 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_4_to_8}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.mttr_breakdown.hour_4_to_8 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_8_to_24}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.mttr_breakdown.hour_8_to_24 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.above_24_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.oos.mttr_breakdown.above_24_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                 </div>
@@ -478,32 +547,44 @@ const DashboardContent = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.total}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.total ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.below_1_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.mttr_breakdown.below_1_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_1_to_4}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.mttr_breakdown.hour_1_to_4 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_4_to_8}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.mttr_breakdown.hour_4_to_8 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_8_to_24}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.mttr_breakdown.hour_8_to_24 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.above_24_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.enterprise.others.mttr_breakdown.above_24_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                 </div>
@@ -539,32 +620,44 @@ const DashboardContent = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.total}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.total ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.below_1_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.mttr_breakdown.below_1_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_1_to_4}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.mttr_breakdown.hour_1_to_4 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_4_to_8}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.mttr_breakdown.hour_4_to_8 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_8_to_24}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.mttr_breakdown.hour_8_to_24 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.above_24_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.oos.mttr_breakdown.above_24_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                 </div>
@@ -583,32 +676,44 @@ const DashboardContent = () => {
                 <div className="grid grid-cols-3 gap-2 p-2">
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.total}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.total ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.below_1_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.mttr_breakdown.below_1_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_1_to_4}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.mttr_breakdown.hour_1_to_4 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_4_to_8}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.mttr_breakdown.hour_4_to_8 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_8_to_24}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.mttr_breakdown.hour_8_to_24 ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
-                    <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.above_24_hour}</div>
+                    <div className="text-2xl font-bold flex items-center justify-center min-h-[2.25rem]">
+                      {loading ? <Loader2 className="h-[2.25rem] w-[2.25rem] animate-spin text-white" /> : dashboardData?.partnership.others.mttr_breakdown.above_24_hour ?? 0}
+                    </div>
                     <div className="text-xs">T  T</div>
                   </div>
                 </div>
@@ -619,15 +724,26 @@ const DashboardContent = () => {
       </div>
 
       {/* Chart Filters */}
-      <section className="p-4 px-0 space-y-4">
-        {/* <h3 className="text-white text-lg font-semibold">Chart Filters</h3> */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="space-y-2">
+      <section className="pt-4 px-0 space-y-4">
+        <div className="flex flex-wrap  gap-4">
+          {/* <Select value={timeFilter} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all_time') => setTimeFilter(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Time Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">Last 4 Days</SelectItem>
+            <SelectItem value="weekly">Last 4 Weeks</SelectItem>
+            <SelectItem value="monthly">Last 4 Months</SelectItem>
+            <SelectItem value="all_time">All Time</SelectItem>
+          </SelectContent>
+        </Select> */}
+
+          <div className="space-y-2 min-w-[180px]">
             <Label htmlFor="link-type" className="text-sm font-medium text-white">
               Link Type
             </Label>
             <Select value={linkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setLinkType(value)}>
-              <SelectTrigger className="w-full bg-background">
+              <SelectTrigger className="w-full min-w-[180px] bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -638,45 +754,82 @@ const DashboardContent = () => {
             </Select>
           </div>
 
-          {/* <div className="space-y-2">
-            <Label htmlFor="customer-name" className="text-sm font-medium text-white">
+          <div className="space-y-2">
+            <Label htmlFor="chart-customer-name" className="text-sm font-medium text-white">
               Customer Name
             </Label>
             <AsyncPaginateSelect
-              value={customerName ? { label: customerName, value: customerName } : null}
-              onChange={(option) => setCustomerName(option ? option.value : '')}
+              value={chartCustomerName ? { label: chartCustomerName, value: chartCustomerName } : null}
+              onChange={(option) => setChartCustomerName(option ? option.value : '')}
               loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
               placeholder="Filter by customer"
               debounceTimeout={400}
             />
-          </div> */}
+
+          </div>
 
 
-          {/* <div className="space-y-2">
+
+
+          <div className="space-y-2">
             <Label htmlFor="link-id" className="text-sm font-medium text-white">
               Link ID
             </Label>
-            <Input
-              id="link-id"
-              type="text"
-              placeholder="Filter by link ID"
-              value={linkId}
-              onChange={(e) => setLinkId(e.target.value)}
-            />
-          </div> */}
-
-          <div className="space-y-2 w-30">
-            <Label className="text-sm font-medium text-white invisible">Apply</Label>
-            <Button
-              onClick={handleChartFilterApply}
-              disabled={yearlyChartLoading || weeklyChartLoading || dailyChartLoading}
-              className="w-full text-white px-4 py-2 text-sm font-semibold bg-[#164396]"
-            >
-              {(yearlyChartLoading || weeklyChartLoading || dailyChartLoading) ? "Applying..." : "Apply"}
-            </Button>
+            <div className='flex items-center gap-4 w-full'>
+              <AsyncPaginateSelect
+                key={chartCustomerName || 'no-customer'}
+                value={chartLinkId ? { label: chartLinkId, value: chartLinkId } : null}
+                onChange={(option) => setChartLinkId(option ? option.value : '')}
+                loadOptions={async (inputValue, loadedOptions, additional) => {
+                  const axios = (await import('axios')).default;
+                  const page = (additional && typeof additional === 'object' && typeof (additional as { page?: number }).page === 'number')
+                    ? (additional as { page: number }).page
+                    : 1;
+                  let params: Record<string, string | number>;
+                  if (chartCustomerName && chartCustomerName.trim() !== '') {
+                    params = {
+                      page: page,
+                      page_size: 10,
+                      q: inputValue || '',
+                      customer_name: chartCustomerName
+                    };
+                  } else {
+                    params = {
+                      page: page,
+                      page_size: 10,
+                      q: inputValue || '',
+                    };
+                  }
+                  const res = await axios.get('http://localhost:8000/search/link-id', { params });
+                  const data = res.data;
+                  const hasMore = typeof data.has_more !== 'undefined'
+                    ? data.has_more
+                    : (data.results && data.results.length === 10);
+                  return {
+                    options: data.results || [],
+                    hasMore,
+                    additional: { page: page + 1 },
+                  };
+                }}
+                placeholder="Filter by link ID"
+                debounceTimeout={400}
+              />
+              <Button onClick={handleChartFilterApply} disabled={chartFilterLoading} className="text-white bg-[#164396] flex items-center justify-center">
+                {chartFilterLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+              </Button>
+              {(linkType !== 'all' || !!chartCustomerName || !!chartLinkId) && (
+                <Button onClick={handleChartFilterReset} type="button" variant="outline" className="text-white border-white">
+                  Reset
+                </Button>
+              )}
+            </div>
           </div>
+
         </div>
+
       </section>
+
+
 
       {/* Trends Section */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
