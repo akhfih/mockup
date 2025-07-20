@@ -43,7 +43,7 @@ export const EChart: React.FC<EChartProps> = ({
   useEffect(() => {
     if (!chartRef.current) return
 
-    const chart = echarts.init(chartRef.current, undefined, chartSettings)
+    const chart = echarts.init(chartRef.current, 'undefined', chartSettings)
 
     if (events) {
       for (const [key, handler] of Object.entries(events)) {

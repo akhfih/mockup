@@ -5,6 +5,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8
 
 export interface DashboardFilters {
   time_filter?: 'daily' | 'weekly' | 'monthly' | 'all_time';
+  create_from?: string; // format: 'YYYY-MM-DD' atau 'YYYY-MM-DDTHH:mm:ss'
+  create_end?: string;  // format: 'YYYY-MM-DD' atau 'YYYY-MM-DDTHH:mm:ss'
 }
 
 export interface ChartFilters {

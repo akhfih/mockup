@@ -1,13 +1,16 @@
 'use client';
 
+import { format } from 'date-fns';
 import type { EChartsOption } from 'echarts';
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from 'react';
+import { DateTimePicker } from '@/components/datetime-picker/datetime-picker';
+import { SimpleTimePicker } from '@/components/datetime-picker/simple-time-picker';
 import { EChart } from '@/components/echart/EChart';
 import { ProtectedRoute } from '@/components/protected-route';
+import { AsyncPaginateSelect } from '@/components/ui/AsyncPaginateSelect';
 import { Button } from "@/components/ui/button";
 // import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { createLoadOptions } from '@/lib/asyncPaginateHelpers';
 import { getPreviousYears } from '@/lib/dateUtils';
 import { ChartFilters, ChartResponse, DashboardFilters, dashboardService } from '@/services/dashboardService';
 import { DashboardResponse } from '@/types/dashboard';
@@ -38,16 +42,33 @@ const DashboardContent = () => {
   const [weeklyChartLoading, setWeeklyChartLoading] = useState(false);
   const [dailyChartLoading, setDailyChartLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createFromDate, setCreateFromDate] = useState<Date | undefined>(undefined);
+  const [createFromTime, setCreateFromTime] = useState<Date | undefined>(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return now;
+  });
+  const [createEndDate, setCreateEndDate] = useState<Date | undefined>(undefined);
+  const [createEndTime, setCreateEndTime] = useState<Date | undefined>(() => {
+    const now = new Date();
+    now.setHours(23, 59, 59, 0);
+    return now;
+  });
 
   const years = getPreviousYears(4);
 
   // Dashboard filters
-  const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'all_time'>('all_time');
+  // const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly' | 'all_time'>('all_time');
 
   // Chart filters (shared across all charts)
   const [linkType, setLinkType] = useState<'enterprise' | 'wholesale' | 'all'>('all');
   const [customerName, setCustomerName] = useState('');
   const [linkId, setLinkId] = useState('');
+
+  // Reset linkId and force AsyncPaginateSelect to clear when customerName changes or is cleared
+  useEffect(() => {
+    setLinkId("");
+  }, [customerName]);
 
   const fetchDashboardData = async (filters?: DashboardFilters) => {
     try {
@@ -66,9 +87,9 @@ const DashboardContent = () => {
   const fetchYearlyChartData = async (filters: ChartFilters) => {
     try {
       setYearlyChartLoading(true);
-      console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
+      // console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
       const data = await dashboardService.getChartData(filters);
-      console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
+      // console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
       setYearlyChartData(data);
     } catch (err) {
       console.error('Yearly chart data fetch error:', err);
@@ -80,9 +101,9 @@ const DashboardContent = () => {
   const fetchWeeklyChartData = async (filters: ChartFilters) => {
     try {
       setWeeklyChartLoading(true);
-      console.log("Sending weekly chart filters:", JSON.stringify(filters, null, 2));
+      // console.log("Sending weekly chart filters:", JSON.stringify(filters, null, 2));
       const data = await dashboardService.getChartData(filters);
-      console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
+      // console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
       setWeeklyChartData(data);
     } catch (err) {
       console.error('Weekly chart data fetch error:', err);
@@ -94,9 +115,9 @@ const DashboardContent = () => {
   const fetchDailyChartData = async (filters: ChartFilters) => {
     try {
       setDailyChartLoading(true);
-      console.log("Sending daily chart filters:", JSON.stringify(filters, null, 2));
+      // console.log("Sending daily chart filters:", JSON.stringify(filters, null, 2));
       const data = await dashboardService.getChartData(filters);
-      console.log("Received daily chart data:", JSON.stringify(data, null, 2));
+      // console.log("Received daily chart data:", JSON.stringify(data, null, 2));
       setDailyChartData(data);
     } catch (err) {
       console.error('Daily chart data fetch error:', err);
@@ -128,8 +149,30 @@ const DashboardContent = () => {
     });
   }, []);
 
+  useEffect(() => {
+    // Update chart data when dashboard data changes
+    console.log("from Date " + createFromDate + " to " + createEndDate);
+    console.log("from Time " + createFromTime + " to " + createEndTime);
+  }, [dashboardData, createFromDate])
+
   const handleDashboardFilterApply = () => {
-    fetchDashboardData({ time_filter: timeFilter });
+    const create_from = createFromDate
+      ? `${createFromDate.getFullYear()}-${String(createFromDate.getMonth() + 1).padStart(2, '0')}-${String(createFromDate.getDate()).padStart(2, '0')}T${createFromTime ? format(createFromTime, 'HH:mm:ss') : '00:00:00'
+      }`
+      : undefined;
+
+    const create_end = createEndDate
+      ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')}T${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'
+      }`
+      : undefined;
+
+    fetchDashboardData({
+      // time_filter: timeFilter,
+      create_from,
+      create_end,
+      ...(customerName && { customer_name: customerName }),
+      ...(linkId && { link_id: linkId })
+    });
   };
 
   const handleChartFilterApply = () => {
@@ -231,9 +274,9 @@ const DashboardContent = () => {
   }
   return (
     <div className="space-y-6 p-6">
-      {/* TT Down Section */}
-      <div className="flex flex-wrap items-center gap-4">
-        <Select value={timeFilter} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all_time') => setTimeFilter(value)}>
+      {/* T  T Down Section */}
+      <div className="flex flex-wrap  gap-4">
+        {/* <Select value={timeFilter} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all_time') => setTimeFilter(value)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Time Filter" />
           </SelectTrigger>
@@ -243,11 +286,135 @@ const DashboardContent = () => {
             <SelectItem value="monthly">Last 4 Months</SelectItem>
             <SelectItem value="all_time">All Time</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
 
-        <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396]">
-          {loading ? "Applying..." : "Apply"}
-        </Button>
+        <div className="space-y-2">
+          <Label htmlFor="link-type" className="text-sm font-medium text-white">
+            Create From
+          </Label>
+          <div className="flex items-center gap-2 w-full">
+
+            <DateTimePicker
+              value={createFromDate}
+              onChange={(date: Date | undefined) =>
+                setCreateFromDate(date)
+              }
+              hideTime={true}
+              placeholder='Create From Date'
+              className='w-full'
+            />
+            <SimpleTimePicker
+              value={createFromTime ?? new Date()}
+              onChange={setCreateFromTime}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="link-type" className="text-sm font-medium text-white">
+            Create End
+          </Label>
+          <div className="flex items-center gap-2">
+
+            <DateTimePicker
+              value={createEndDate}
+              onChange={(date: Date | undefined) =>
+                setCreateEndDate(date)
+              }
+              hideTime={true}
+              placeholder='Create End'
+              className='w-full'
+            />
+            <SimpleTimePicker
+              value={createEndTime ?? new Date()}
+              onChange={setCreateEndTime}
+            />
+
+          </div>
+        </div>
+
+
+
+        <div className="space-y-2">
+          <Label htmlFor="link-type" className="text-sm font-medium text-white">
+            Customer Name
+          </Label>
+          <div className='flex items-center gap-4 w-full'>
+            <AsyncPaginateSelect
+              value={customerName ? { label: customerName, value: customerName } : null}
+              onChange={(option) => setCustomerName(option ? option.value : '')}
+              loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
+              placeholder="Customer Name"
+              debounceTimeout={400}
+            />
+
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="link-id" className="text-sm font-medium text-white">
+            Link ID
+          </Label>
+          <div className='flex items-center gap-4 w-full'>
+            <AsyncPaginateSelect
+              key={customerName || 'no-customer'}
+              value={linkId ? { label: linkId, value: linkId } : null}
+              onChange={(option) => setLinkId(option ? option.value : '')}
+              loadOptions={async (inputValue, loadedOptions, additional) => {
+                const axios = (await import('axios')).default;
+                // Use correct page for pagination
+                const page = (additional && typeof additional === 'object' && typeof (additional as { page?: number }).page === 'number')
+                  ? (additional as { page: number }).page
+                  : 1;
+                let params: Record<string, string | number>;
+                if (customerName && customerName.trim() !== '') {
+                  // If customerName is selected, always filter by both q and customer_name
+                  params = {
+                    page: page,
+                    page_size: 10,
+                    q: inputValue || '',
+                    customer_name: customerName
+                  };
+                } else {
+                  // If customerName is not selected, filter only by q
+                  params = {
+                    page: page,
+                    page_size: 10,
+                    q: inputValue || '',
+                  };
+                }
+                const res = await axios.get('http://localhost:8000/search/link-id', { params });
+                const data = res.data;
+                // If backend does not return has_more, fallback to results length
+                const hasMore = typeof data.has_more !== 'undefined'
+                  ? data.has_more
+                  : (data.results && data.results.length === 10);
+                return {
+                  options: data.results || [],
+                  hasMore,
+                  additional: { page: page + 1 },
+                };
+              }}
+              placeholder="Link ID"
+              debounceTimeout={400}
+            />
+            <Button onClick={handleDashboardFilterApply} disabled={loading} className="text-white bg-[#164396]">
+              {loading ? "Applying..." : "Apply"}
+            </Button>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
         {/* Kiri - Enterprise */}
@@ -268,32 +435,32 @@ const DashboardContent = () => {
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.total}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.below_1_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_1_to_4}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_4_to_8}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.hour_8_to_24}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.oos.mttr_breakdown.above_24_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                 </div>
               </div>
@@ -312,32 +479,32 @@ const DashboardContent = () => {
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.total}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.below_1_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_1_to_4}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_4_to_8}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.hour_8_to_24}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.enterprise.others.mttr_breakdown.above_24_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                 </div>
               </div>
@@ -373,32 +540,32 @@ const DashboardContent = () => {
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.total}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.below_1_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_1_to_4}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_4_to_8}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.hour_8_to_24}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.oos.mttr_breakdown.above_24_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                 </div>
               </div>
@@ -417,32 +584,32 @@ const DashboardContent = () => {
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 ">
                     <div className="text-xs font-bold">Total</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.total}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">Below 1 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.below_1_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">1-4 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_1_to_4}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1">
                     <div className="text-xs font-bold">4-8 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_4_to_8}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold">8-24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.hour_8_to_24}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                   <div className="p-2 flex flex-col items-center justify-center space-y-1 text-center">
                     <div className="text-xs font-bold"> Above 24 Hour</div>
                     <div className="text-2xl font-bold">{dashboardData.partnership.others.mttr_breakdown.above_24_hour}</div>
-                    <div className="text-xs">TT</div>
+                    <div className="text-xs">T  T</div>
                   </div>
                 </div>
               </div>
@@ -460,7 +627,7 @@ const DashboardContent = () => {
               Link Type
             </Label>
             <Select value={linkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setLinkType(value)}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -471,20 +638,21 @@ const DashboardContent = () => {
             </Select>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="customer-name" className="text-sm font-medium text-white">
               Customer Name
             </Label>
-            <Input
-              id="customer-name"
-              type="text"
+            <AsyncPaginateSelect
+              value={customerName ? { label: customerName, value: customerName } : null}
+              onChange={(option) => setCustomerName(option ? option.value : '')}
+              loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
               placeholder="Filter by customer"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              debounceTimeout={400}
             />
-          </div>
+          </div> */}
 
-          <div className="space-y-2">
+
+          {/* <div className="space-y-2">
             <Label htmlFor="link-id" className="text-sm font-medium text-white">
               Link ID
             </Label>
@@ -495,7 +663,7 @@ const DashboardContent = () => {
               value={linkId}
               onChange={(e) => setLinkId(e.target.value)}
             />
-          </div>
+          </div> */}
 
           <div className="space-y-2 w-30">
             <Label className="text-sm font-medium text-white invisible">Apply</Label>
