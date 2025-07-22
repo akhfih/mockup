@@ -208,13 +208,14 @@ const DashboardContent = () => {
     setLoading(true);
     try {
       const create_from = createFromDate
-        ? `${createFromDate.getFullYear()}-${String(createFromDate.getMonth() + 1).padStart(2, '0')}-${String(createFromDate.getDate()).padStart(2, '0')}T${createFromTime ? format(createFromTime, 'HH:mm:ss') : '00:00:00'}`
+        ? `${createFromDate.getFullYear()}-${String(createFromDate.getMonth() + 1).padStart(2, '0')}-${String(createFromDate.getDate()).padStart(2, '0')} ${createFromTime ? format(createFromTime, 'HH:mm:ss') : '00:00:00'}`
         : undefined;
 
       const create_end = createEndDate
-        ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')}T${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'}`
+        ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')} ${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'}`
         : undefined;
 
+      alert(create_from + " " + create_end);
       await fetchDashboardData({
         // time_filter: timeFilter,
         create_from,

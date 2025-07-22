@@ -38,30 +38,49 @@ const DataPageContent = () => {
         }
     }
 
-    // Filter states
-    const [linkType, setLinkType] = useState<'enterprise' | 'wholesale' | 'all'>('all');
-    const [customerName, setCustomerName] = useState('');
-    const [linkId, setLinkId] = useState('');
-    const [status, setStatus] = useState('all');
+
+    // Local filter input states (for UI controls)
+    const [inputLinkType, setInputLinkType] = useState<'enterprise' | 'wholesale' | 'all'>('all');
+    const [inputCustomerName, setInputCustomerName] = useState('');
+    const [inputLinkId, setInputLinkId] = useState('');
+    const [inputStatus, setInputStatus] = useState('all');
+
+    // Reset Link ID when Customer Name changes
+    const handleCustomerNameChange = (option: { label: string; value: string } | null) => {
+        setInputCustomerName(option ? option.value : '');
+        setInputLinkId('');
+    };
     const [filterLoading, setFilterLoading] = useState(false);
+
+    // Actual filter values passed to TicketsTable
+    const [appliedLinkType, setAppliedLinkType] = useState<'enterprise' | 'wholesale' | 'all'>('all');
+    const [appliedCustomerName, setAppliedCustomerName] = useState('');
+    const [appliedLinkId, setAppliedLinkId] = useState('');
+    const [appliedStatus, setAppliedStatus] = useState('all');
 
     const handleApply = () => {
         setFilterLoading(true);
-        if (ticketsTableRef.current) {
-            ticketsTableRef.current.reloadData();
-        }
-        setTimeout(() => setFilterLoading(false), 500); // fake loading for UX
+        setAppliedLinkType(inputLinkType);
+        setAppliedCustomerName(inputCustomerName);
+        setAppliedLinkId(inputLinkId);
+        setAppliedStatus(inputStatus);
+        setTimeout(() => {
+            setFilterLoading(false);
+            if (ticketsTableRef.current) {
+                ticketsTableRef.current.reloadData();
+            }
+        }, 500); // fake loading for UX
     };
 
     const handleReset = () => {
-        setLinkType('all');
-        setCustomerName('');
-        setLinkId('');
-        setStatus('all');
+        setInputLinkType('all');
+        setInputCustomerName('');
+        setInputLinkId('');
+        setInputStatus('all');
         setTimeout(() => handleApply(), 0);
     };
 
-    const isFilterActive = linkType !== 'all' || customerName || linkId || status !== 'all';
+    const isFilterActive = inputLinkType !== 'all' || inputCustomerName || inputLinkId || inputStatus !== 'all';
 
     return (
         <div className="m-10 space-y-4">
@@ -72,7 +91,7 @@ const DataPageContent = () => {
             <div className="flex flex-wrap gap-4 mb-4">
                 <div className="space-y-2 min-w-[180px]">
                     <Label htmlFor="link-type" className="text-sm font-medium">Link Type</Label>
-                    <Select value={linkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setLinkType(value)}>
+                    <Select value={inputLinkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setInputLinkType(value)}>
                         <SelectTrigger className="w-full min-w-[180px] bg-background">
                             <SelectValue />
                         </SelectTrigger>
@@ -86,8 +105,8 @@ const DataPageContent = () => {
                 <div className="space-y-2 min-w-[180px]">
                     <Label htmlFor="customer-name" className="text-sm font-medium">Customer Name</Label>
                     <AsyncPaginateSelect
-                        value={customerName ? { label: customerName, value: customerName } : null}
-                        onChange={(option) => setCustomerName(option ? option.value : '')}
+                        value={inputCustomerName ? { label: inputCustomerName, value: inputCustomerName } : null}
+                        onChange={handleCustomerNameChange}
                         loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
                         placeholder="Customer Name"
                         debounceTimeout={400}
@@ -96,21 +115,21 @@ const DataPageContent = () => {
                 <div className="space-y-2 min-w-[180px]">
                     <Label htmlFor="link-id" className="text-sm font-medium">Link ID</Label>
                     <AsyncPaginateSelect
-                        key={customerName || 'no-customer'}
-                        value={linkId ? { label: linkId, value: linkId } : null}
-                        onChange={(option) => setLinkId(option ? option.value : '')}
+                        key={inputCustomerName || 'no-customer'}
+                        value={inputLinkId ? { label: inputLinkId, value: inputLinkId } : null}
+                        onChange={(option) => setInputLinkId(option ? option.value : '')}
                         loadOptions={async (inputValue, loadedOptions, additional) => {
                             const axios = (await import('axios')).default;
                             const page = (additional && typeof additional === 'object' && typeof (additional as { page?: number }).page === 'number')
                                 ? (additional as { page: number }).page
                                 : 1;
                             let params: Record<string, string | number>;
-                            if (customerName && customerName.trim() !== '') {
+                            if (inputCustomerName && inputCustomerName.trim() !== '') {
                                 params = {
                                     page: page,
                                     page_size: 10,
                                     q: inputValue || '',
-                                    customer_name: customerName
+                                    customer_name: inputCustomerName
                                 };
                             } else {
                                 params = {
@@ -136,7 +155,7 @@ const DataPageContent = () => {
                 </div>
                 <div className="space-y-2 min-w-[180px]">
                     <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-                    <Select value={status} onValueChange={setStatus}>
+                    <Select value={inputStatus} onValueChange={setInputStatus}>
                         <SelectTrigger className="w-full min-w-[180px] bg-background">
                             <SelectValue />
                         </SelectTrigger>
@@ -176,10 +195,10 @@ const DataPageContent = () => {
             <div>
                 <TicketsTable
                     ref={ticketsTableRef}
-                    linkType={linkType}
-                    customerName={customerName}
-                    linkId={linkId}
-                    statusFilter={status}
+                    linkType={appliedLinkType}
+                    customerName={appliedCustomerName}
+                    linkId={appliedLinkId}
+                    statusFilter={appliedStatus}
                 />
             </div>
         </div>
