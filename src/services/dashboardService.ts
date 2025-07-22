@@ -29,7 +29,7 @@ export interface ChartResponse {
     name: string;
     data: Array<{
       label: string;
-      value: number;
+      value: string;
       percentage_change: number;
       comparison_value: number;
     }>;
@@ -57,7 +57,7 @@ export const dashboardService = {
 
   async getChartData(filters: ChartFilters): Promise<ChartResponse> {
     try {
-      const response = await axios.get<ChartResponse>(`${API_BASE_URL}/chart`, {
+      const response = await axios.get<ChartResponse>(`${API_BASE_URL}/mttrchart`, {
         params: filters,
         paramsSerializer: {
           indexes: null // This will serialize arrays as: years=2023&years=2024&years=2025

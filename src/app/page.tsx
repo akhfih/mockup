@@ -93,7 +93,7 @@ const DashboardContent = () => {
     fetchDailyChartData({
       chart_type: 'daily',
       link_type: 'all',
-      days_back: [1, 7, 14]
+      days_back: [1, 2]
     });
   };
 
@@ -135,11 +135,11 @@ const DashboardContent = () => {
 
   const fetchYearlyChartData = async (filters: ChartFilters) => {
     try {
-      setYearlyChartLoading(true);
-      // console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
-      const data = await dashboardService.getChartData(filters);
-      // console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
-      setYearlyChartData(data);
+      // setYearlyChartLoading(true);
+      // // console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
+      // const data = await dashboardService.getChartData(filters);
+      // // console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
+      // setYearlyChartData(data);
     } catch (err) {
       console.error('Yearly chart data fetch error:', err);
     } finally {
@@ -151,9 +151,9 @@ const DashboardContent = () => {
     try {
       setWeeklyChartLoading(true);
       // console.log("Sending weekly chart filters:", JSON.stringify(filters, null, 2));
-      const data = await dashboardService.getChartData(filters);
-      // console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
-      setWeeklyChartData(data);
+      // const data = await dashboardService.getChartData(filters);
+      // // console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
+      // setWeeklyChartData(data);
     } catch (err) {
       console.error('Weekly chart data fetch error:', err);
     } finally {
@@ -168,6 +168,7 @@ const DashboardContent = () => {
       const data = await dashboardService.getChartData(filters);
       // console.log("Received daily chart data:", JSON.stringify(data, null, 2));
       setDailyChartData(data);
+      // console.log("Data Fetch" + data.data);
     } catch (err) {
       console.error('Daily chart data fetch error:', err);
     } finally {
@@ -194,7 +195,8 @@ const DashboardContent = () => {
     fetchDailyChartData({
       chart_type: 'daily',
       link_type: linkType,
-      days_back: [1, 7, 14]
+      days_back: [1, 2, 3],
+      current_date: '2025-01-31'
     });
   }, []);
 
@@ -250,7 +252,7 @@ const DashboardContent = () => {
         fetchDailyChartData({
           ...baseFilters,
           chart_type: 'daily',
-          days_back: [1, 7, 14]
+          days_back: [1, 2]
         })
       ]);
     } finally {
@@ -264,6 +266,14 @@ const DashboardContent = () => {
     const legendData = data && data.series && data.series.length > 0
       ? data.series.map(s => s.name)
       : ["Data"];
+
+    const seriesData = data.series[0].data.map(item => {
+      // Konversi value hh:mm:ss menjadi total detik
+      const [hh, mm, ss] = item.value.split(':').map(Number);
+      return (hh * 3600) + (mm * 60) + ss;
+    });
+
+    console.log("seriesData", seriesData);
     return {
       // backgroundColor: '#1f1f1f',
       title: {
@@ -272,6 +282,22 @@ const DashboardContent = () => {
       },
       tooltip: {
         trigger: 'axis',
+        // Show all compared series in tooltip
+        formatter: (params: any) => {
+          const paramArray = Array.isArray(params) ? params : [params];
+          const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
+          const lines = [`${label}`];
+          for (const p of paramArray) {
+            const seconds = typeof p.value === 'number' ? p.value : 0;
+            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            lines.push(
+              `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${(p as any).color};"></span> ${(p as any).seriesName}: ${h}:${m}:${s}`
+            );
+          }
+          return lines.join('<br/>');
+        }
       },
       toolbox: {
         show: true,
@@ -295,16 +321,29 @@ const DashboardContent = () => {
         type: 'category',
         boundaryGap: true,
         data: data.x_axis_labels,
+        axisLabel: { rotate: 70, interval: 0, fontSize: 9, },
       },
       yAxis: {
         type: 'value',
-        name: 'Total       ',
+        name: 'Hour  ',
+        axisLabel: {
+          formatter: (val) => {
+            // Tampilkan sebagai "X jam Y menit"
+            const h = Math.floor(val / 3600);
+
+            return `${h}`
+          },
+
+        }
       },
       series: (data.series && data.series.length > 0)
         ? data.series.map(series => ({
           name: series.name,
           type: 'line',
-          data: series.data.map(d => d.value),
+          data: series.data.map(item => {
+            const [hh, mm, ss] = (item.value || item.value || "00:00:00").split(':').map(Number);
+            return (hh * 3600) + (mm * 60) + ss;
+          }),
           color: series.color,
           smooth: false,
         }))
