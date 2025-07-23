@@ -23,7 +23,7 @@ export const EChart: React.FC<EChartProps> = ({
   option,
   chartSettings = { useCoarsePointer: true },
   optionSettings = { notMerge: true },
-  style = { width: '100%', height: '250px' },
+  style = { width: '100%', height: '500px' },
   events,
   ...props
 }) => {

@@ -1,12 +1,13 @@
 'use client';
 
 import { format } from 'date-fns';
-import type { EChartsOption } from 'echarts';
+// import type { EChartsOption } from 'echarts';
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from 'react';
 import { DateTimePicker } from '@/components/datetime-picker/datetime-picker';
 import { SimpleTimePicker } from '@/components/datetime-picker/simple-time-picker';
-import { EChart } from '@/components/echart/EChart';
+// import { EChart } from '@/components/echart/EChart';
+import ChartSection from '@/components/features/dashboard/ChartSection';
 import { ProtectedRoute } from '@/components/protected-route';
 import { AsyncPaginateSelect } from '@/components/ui/AsyncPaginateSelect';
 import { Button } from "@/components/ui/button";
@@ -34,13 +35,13 @@ const HomePage = () => {
 
 const DashboardContent = () => {
   const [dashboardData, setDashboardData] = useState<DashboardResponse | null>(null);
-  const [yearlyChartData, setYearlyChartData] = useState<ChartResponse | null>(null);
-  const [weeklyChartData, setWeeklyChartData] = useState<ChartResponse | null>(null);
-  const [dailyChartData, setDailyChartData] = useState<ChartResponse | null>(null);
+  // const [yearlyChartData, setYearlyChartData] = useState<ChartResponse | null>(null);
+  // const [weeklyChartData, setWeeklyChartData] = useState<ChartResponse | null>(null);
+  // const [dailyChartData, setDailyChartData] = useState<ChartResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [yearlyChartLoading, setYearlyChartLoading] = useState(false);
-  const [weeklyChartLoading, setWeeklyChartLoading] = useState(false);
-  const [dailyChartLoading, setDailyChartLoading] = useState(false);
+  // const [yearlyChartLoading, setYearlyChartLoading] = useState(false);
+  // const [weeklyChartLoading, setWeeklyChartLoading] = useState(false);
+  // const [dailyChartLoading, setDailyChartLoading] = useState(false);
   const [chartFilterLoading, setChartFilterLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createFromDate, setCreateFromDate] = useState<Date | undefined>(undefined);
@@ -133,71 +134,71 @@ const DashboardContent = () => {
     }
   };
 
-  const fetchYearlyChartData = async (filters: ChartFilters) => {
-    try {
-      // setYearlyChartLoading(true);
-      // // console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
-      // const data = await dashboardService.getChartData(filters);
-      // // console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
-      // setYearlyChartData(data);
-    } catch (err) {
-      console.error('Yearly chart data fetch error:', err);
-    } finally {
-      setYearlyChartLoading(false);
-    }
-  };
+  // const fetchYearlyChartData = async (filters: ChartFilters) => {
+  //   try {
+  //     // setYearlyChartLoading(true);
+  //     // // console.log("Sending yearly chart filters:", JSON.stringify(filters, null, 2));
+  //     // const data = await dashboardService.getChartData(filters);
+  //     // // console.log("Received yearly chart data:", JSON.stringify(data, null, 2));
+  //     // setYearlyChartData(data);
+  //   } catch (err) {
+  //     console.error('Yearly chart data fetch error:', err);
+  //   } finally {
+  //     setYearlyChartLoading(false);
+  //   }
+  // };
 
-  const fetchWeeklyChartData = async (filters: ChartFilters) => {
-    try {
-      setWeeklyChartLoading(true);
-      // console.log("Sending weekly chart filters:", JSON.stringify(filters, null, 2));
-      // const data = await dashboardService.getChartData(filters);
-      // // console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
-      // setWeeklyChartData(data);
-    } catch (err) {
-      console.error('Weekly chart data fetch error:', err);
-    } finally {
-      setWeeklyChartLoading(false);
-    }
-  };
+  // const fetchWeeklyChartData = async (filters: ChartFilters) => {
+  //   try {
+  //     setWeeklyChartLoading(true);
+  //     // console.log("Sending weekly chart filters:", JSON.stringify(filters, null, 2));
+  //     // const data = await dashboardService.getChartData(filters);
+  //     // // console.log("Received weekly chart data:", JSON.stringify(data, null, 2));
+  //     // setWeeklyChartData(data);
+  //   } catch (err) {
+  //     console.error('Weekly chart data fetch error:', err);
+  //   } finally {
+  //     setWeeklyChartLoading(false);
+  //   }
+  // };
 
-  const fetchDailyChartData = async (filters: ChartFilters) => {
-    try {
-      setDailyChartLoading(true);
-      // console.log("Sending daily chart filters:", JSON.stringify(filters, null, 2));
-      const data = await dashboardService.getChartData(filters);
-      // console.log("Received daily chart data:", JSON.stringify(data, null, 2));
-      setDailyChartData(data);
-      // console.log("Data Fetch" + data.data);
-    } catch (err) {
-      console.error('Daily chart data fetch error:', err);
-    } finally {
-      setDailyChartLoading(false);
-    }
-  };
+  // const fetchDailyChartData = async (filters: ChartFilters) => {
+  //   try {
+  //     setDailyChartLoading(true);
+  //     // console.log("Sending daily chart filters:", JSON.stringify(filters, null, 2));
+  //     const data = await dashboardService.getChartData(filters);
+  //     // console.log("Received daily chart data:", JSON.stringify(data, null, 2));
+  //     setDailyChartData(data);
+  //     // console.log("Data Fetch" + data.data);
+  //   } catch (err) {
+  //     console.error('Daily chart data fetch error:', err);
+  //   } finally {
+  //     setDailyChartLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     fetchDashboardData();
 
-    // Initial chart data fetch for all three charts
-    fetchYearlyChartData({
-      chart_type: 'yearly',
-      link_type: linkType,
-      years: years
-    });
+    // // Initial chart data fetch for all three charts
+    // fetchYearlyChartData({
+    //   chart_type: 'yearly',
+    //   link_type: linkType,
+    //   years: years
+    // });
 
-    fetchWeeklyChartData({
-      chart_type: 'weekly',
-      link_type: linkType,
-      weeks_back: [1, 2, 3, 4]
-    });
+    // fetchWeeklyChartData({
+    //   chart_type: 'weekly',
+    //   link_type: linkType,
+    //   weeks_back: [1, 2, 3, 4]
+    // });
 
-    fetchDailyChartData({
-      chart_type: 'daily',
-      link_type: linkType,
-      days_back: [1, 2, 3],
-      current_date: '2025-01-31'
-    });
+    // fetchDailyChartData({
+    //   chart_type: 'daily',
+    //   link_type: linkType,
+    //   days_back: [1, 2, 3],
+    //   current_date: '2025-01-31'
+    // });
   }, []);
 
   useEffect(() => {
@@ -230,132 +231,132 @@ const DashboardContent = () => {
     }
   };
 
-  const handleChartFilterApply = async () => {
-    setChartFilterLoading(true);
-    const baseFilters = {
-      link_type: linkType,
-      ...(chartCustomerName && { customer_name: chartCustomerName }),
-      ...(chartLinkId && { link_id: chartLinkId })
-    };
-    try {
-      await Promise.all([
-        fetchYearlyChartData({
-          ...baseFilters,
-          chart_type: 'yearly',
-          years: years
-        }),
-        fetchWeeklyChartData({
-          ...baseFilters,
-          chart_type: 'weekly',
-          weeks_back: [1, 2, 3, 4]
-        }),
-        fetchDailyChartData({
-          ...baseFilters,
-          chart_type: 'daily',
-          days_back: [1, 2]
-        })
-      ]);
-    } finally {
-      setChartFilterLoading(false);
-    }
-  };
+  // const handleChartFilterApply = async () => {
+  //   setChartFilterLoading(true);
+  //   const baseFilters = {
+  //     link_type: linkType,
+  //     ...(chartCustomerName && { customer_name: chartCustomerName }),
+  //     ...(chartLinkId && { link_id: chartLinkId })
+  //   };
+  //   try {
+  //     await Promise.all([
+  //       fetchYearlyChartData({
+  //         ...baseFilters,
+  //         chart_type: 'yearly',
+  //         years: years
+  //       }),
+  //       fetchWeeklyChartData({
+  //         ...baseFilters,
+  //         chart_type: 'weekly',
+  //         weeks_back: [1, 2, 3, 4]
+  //       }),
+  //       fetchDailyChartData({
+  //         ...baseFilters,
+  //         chart_type: 'daily',
+  //         days_back: [1, 2]
+  //       })
+  //     ]);
+  //   } finally {
+  //     setChartFilterLoading(false);
+  //   }
+  // };
 
   // Generate ECharts option from API data (styled like TTTrendChart)
-  const generateChartOption = (data: ChartResponse): EChartsOption => {
-    // Always show legend, even if data is empty
-    const legendData = data && data.series && data.series.length > 0
-      ? data.series.map(s => s.name)
-      : ["Data"];
+  // const generateChartOption = (data: ChartResponse): EChartsOption => {
+  //   // Always show legend, even if data is empty
+  //   const legendData = data && data.series && data.series.length > 0
+  //     ? data.series.map(s => s.name)
+  //     : ["Data"];
 
-    const seriesData = data.series[0].data.map(item => {
-      // Konversi value hh:mm:ss menjadi total detik
-      const [hh, mm, ss] = item.value.split(':').map(Number);
-      return (hh * 3600) + (mm * 60) + ss;
-    });
+  //   const seriesData = data.series[0].data.map(item => {
+  //     // Konversi value hh:mm:ss menjadi total detik
+  //     const [hh, mm, ss] = item.value.split(':').map(Number);
+  //     return (hh * 3600) + (mm * 60) + ss;
+  //   });
 
-    console.log("seriesData", seriesData);
-    return {
-      // backgroundColor: '#1f1f1f',
-      title: {
-        text: data.title,
-        left: 'left',
-      },
-      tooltip: {
-        trigger: 'axis',
-        // Show all compared series in tooltip
-        formatter: (params: any) => {
-          const paramArray = Array.isArray(params) ? params : [params];
-          const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
-          const lines = [`${label}`];
-          for (const p of paramArray) {
-            const seconds = typeof p.value === 'number' ? p.value : 0;
-            const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-            const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-            const s = (seconds % 60).toString().padStart(2, '0');
-            lines.push(
-              `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${(p as any).color};"></span> ${(p as any).seriesName}: ${h}:${m}:${s}`
-            );
-          }
-          return lines.join('<br/>');
-        }
-      },
-      toolbox: {
-        show: true,
-        feature: {
-          saveAsImage: {}
-        }
-      },
-      legend: {
-        show: true,
-        bottom: 0,
-        type: 'scroll',
-        data: legendData,
-      },
-      grid: {
-        left: '3%',
-        right: '4%',
-        bottom: '15%',
-        containLabel: true,
-      },
-      xAxis: {
-        type: 'category',
-        boundaryGap: true,
-        data: data.x_axis_labels,
-        axisLabel: { rotate: 70, interval: 0, fontSize: 9, },
-      },
-      yAxis: {
-        type: 'value',
-        name: 'Hour  ',
-        axisLabel: {
-          formatter: (val) => {
-            // Tampilkan sebagai "X jam Y menit"
-            const h = Math.floor(val / 3600);
+  //   // console.log("seriesData", seriesData);
+  //   return {
+  //     // backgroundColor: '#1f1f1f',
+  //     title: {
+  //       text: data.title,
+  //       left: 'left',
+  //     },
+  //     tooltip: {
+  //       trigger: 'axis',
+  //       // Show all compared series in tooltip
+  //       formatter: (params: any) => {
+  //         const paramArray = Array.isArray(params) ? params : [params];
+  //         const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
+  //         const lines = [`${label}`];
+  //         for (const p of paramArray) {
+  //           const seconds = typeof p.value === 'number' ? p.value : 0;
+  //           const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+  //           const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+  //           const s = (seconds % 60).toString().padStart(2, '0');
+  //           lines.push(
+  //             `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${(p as any).color};"></span> ${(p as any).seriesName}: ${h}:${m}:${s}`
+  //           );
+  //         }
+  //         return lines.join('<br/>');
+  //       }
+  //     },
+  //     toolbox: {
+  //       show: true,
+  //       feature: {
+  //         saveAsImage: {}
+  //       }
+  //     },
+  //     legend: {
+  //       show: true,
+  //       bottom: 0,
+  //       type: 'scroll',
+  //       data: legendData,
+  //     },
+  //     grid: {
+  //       left: '3%',
+  //       right: '4%',
+  //       bottom: '15%',
+  //       containLabel: true,
+  //     },
+  //     xAxis: {
+  //       type: 'category',
+  //       boundaryGap: true,
+  //       data: data.x_axis_labels,
+  //       axisLabel: { rotate: 70, interval: 0, fontSize: 9, },
+  //     },
+  //     yAxis: {
+  //       type: 'value',
+  //       name: 'Hour  ',
+  //       axisLabel: {
+  //         formatter: (val) => {
+  //           // Tampilkan sebagai "X jam Y menit"
+  //           const h = Math.floor(val / 3600);
 
-            return `${h}`
-          },
+  //           return `${h}`
+  //         },
 
-        }
-      },
-      series: (data.series && data.series.length > 0)
-        ? data.series.map(series => ({
-          name: series.name,
-          type: 'line',
-          data: series.data.map(item => {
-            const [hh, mm, ss] = (item.value || item.value || "00:00:00").split(':').map(Number);
-            return (hh * 3600) + (mm * 60) + ss;
-          }),
-          color: series.color,
-          smooth: false,
-        }))
-        : [{
-          name: 'Data',
-          type: 'line',
-          data: [],
-          color: '#888',
-          smooth: false,
-        }]
-    };
-  };
+  //       }
+  //     },
+  //     series: (data.series && data.series.length > 0)
+  //       ? data.series.map(series => ({
+  //         name: series.name,
+  //         type: 'line',
+  //         data: series.data.map(item => {
+  //           const [hh, mm, ss] = (item.value || item.value || "00:00:00").split(':').map(Number);
+  //           return (hh * 3600) + (mm * 60) + ss;
+  //         }),
+  //         color: series.color,
+  //         smooth: false,
+  //       }))
+  //       : [{
+  //         name: 'Data',
+  //         type: 'line',
+  //         data: [],
+  //         color: '#888',
+  //         smooth: false,
+  //       }]
+  //   };
+  // };
 
   // Remove global loading screen so dashboard always renders
 
@@ -764,19 +765,8 @@ const DashboardContent = () => {
       </div>
 
       {/* Chart Filters */}
-      <section className="pt-4 px-0 space-y-4">
+      {/* <section className="pt-4 px-0 space-y-4">
         <div className="flex flex-wrap  gap-4">
-          {/* <Select value={timeFilter} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all_time') => setTimeFilter(value)}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Time Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="daily">Last 4 Days</SelectItem>
-            <SelectItem value="weekly">Last 4 Weeks</SelectItem>
-            <SelectItem value="monthly">Last 4 Months</SelectItem>
-            <SelectItem value="all_time">All Time</SelectItem>
-          </SelectContent>
-        </Select> */}
 
           <div className="space-y-2 min-w-[180px]">
             <Label htmlFor="link-type" className="text-sm font-medium text-white">
@@ -805,11 +795,7 @@ const DashboardContent = () => {
               placeholder="Customer Name"
               debounceTimeout={400}
             />
-
           </div>
-
-
-
 
           <div className="space-y-2">
             <Label htmlFor="link-id" className="text-sm font-medium text-white">
@@ -867,75 +853,12 @@ const DashboardContent = () => {
 
         </div>
 
-      </section>
+      </section> */}
 
 
 
       {/* Trends Section */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Daily Chart */}
-        <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
-          <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Daily Trend</h4>
-          <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
-            {dailyChartData ? (
-              <div style={{ height: 250 }}>
-                <EChart option={generateChartOption(dailyChartData)} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                {dailyChartLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
-                ) : (
-                  <div className="text-white">No daily data available</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-
-        {/* Weekly Chart */}
-        <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
-          <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Weekly Trend</h4>
-          <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
-            {weeklyChartData ? (
-              <div style={{ height: 250 }}>
-                <EChart option={generateChartOption(weeklyChartData)} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                {weeklyChartLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
-                ) : (
-                  <div className="text-white">No weekly data available</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Yearly Chart */}
-        <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
-          <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Yearly Trend</h4>
-          <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
-            {yearlyChartData ? (
-              <div style={{ height: 250 }}>
-                <EChart option={generateChartOption(yearlyChartData)} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                {yearlyChartLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
-                ) : (
-                  <div className="text-white">No yearly data available</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-
-      </section>
+      <ChartSection />
     </div >
 
 
