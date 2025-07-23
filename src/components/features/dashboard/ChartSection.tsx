@@ -21,33 +21,249 @@ const ChartSection: React.FC = () => {
     const [chartLinkId, setChartLinkId] = useState('');
     const [chartFilterLoading, setChartFilterLoading] = useState(false);
     const [weeklyChartLoading, setWeeklyChartLoading] = useState(false);
+    const [yearlyChartData, setYearlyChartData] = useState<ChartResponse | null>(null);
+    const [yearlyChartLoading, setYearlyChartLoading] = useState(false);
     const [createFromDate, setCreateFromDate] = useState<Date | undefined>(undefined);
     // const [createFromTime, setCreateFromTime] = useState<Date | undefined>(() => {
     //     const now = new Date();
     //     now.setHours(23, 59, 59, 59);
     //     return now;
     // });
+    // Generate ECharts option for yearly chart (similar style)
+    const generateChartYearlyOption = (data: ChartResponse): EChartsOption => {
+        const legendData = data && data.series && data.series.length > 0
+            ? data.series.map(s => s.name)
+            : ["Data"];
+        return {
+            title: {
+                text: data.title,
+                left: 'center',
+                textStyle: {
+                    rich: {
+                        a: { fontSize: 16, fontWeight: 'bold', color: '#333', lineHeight: 30 },
+                        b: { fontSize: 14, color: '#666', lineHeight: 26 }
+                    }
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: (params: unknown) => {
+                    type TooltipParam = {
+                        axisValueLabel?: string;
+                        axisValue?: string;
+                        value: number;
+                        color: string;
+                        seriesName: string;
+                    };
+                    const paramArray: TooltipParam[] = Array.isArray(params) ? params as TooltipParam[] : [params as TooltipParam];
+                    const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
+                    const lines = [`${label}`];
+                    for (const p of paramArray) {
+                        const seconds = typeof p.value === 'number' ? p.value : 0;
+                        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                        const s = (seconds % 60).toString().padStart(2, '0');
+                        lines.push(
+                            `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${p.color};"></span> ${p.seriesName}: ${h}:${m}:${s}`
+                        );
+                    }
+                    return lines.join('<br/>');
+                }
+            },
+            toolbox: {
+                show: true,
+                feature: { saveAsImage: {} }
+            },
+            legend: {
+                show: true,
+                bottom: 0,
+                type: 'scroll',
+                data: legendData,
+            },
+            grid: {
+                top: '20%', left: '3%', right: '4%', bottom: '15%', containLabel: true,
+            },
+            xAxis: {
+                type: 'category', boundaryGap: true, data: data.x_axis_labels,
+                axisLabel: { rotate: 18, interval: 0, fontSize: 9, },
+            },
+            yAxis: {
+                type: 'value', name: 'Hour  ',
+                axisLabel: {
+                    formatter: (val) => {
+                        const h = Math.floor(val / 3600);
+                        return `${h}`;
+                    },
+                }
+            },
+            series: (data.series && data.series.length > 0)
+                ? data.series.map(series => ({
+                    name: series.name,
+                    type: 'line',
+                    data: series.data.map(item => {
+                        const [hh, mm, ss] = (item.value || "00:00:00").split(':').map(Number);
+                        return (hh * 3600) + (mm * 60) + ss;
+                    }),
+                    color: series.color,
+                    smooth: false,
+                    label: {
+                        show: true,
+                        fontSize: "9px",
+                        formatter: (params) => {
+                            const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
+                            const h = Math.floor(value / 3600).toString().padStart(2, '0');
+                            const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+                            const s = (value % 60).toString().padStart(2, '0');
+                            return `${h}:${m}:${s}`;
+                        }
+                    },
+                }))
+                : [{ name: 'Data', type: 'line', data: [], color: '#888', smooth: false }]
+        };
+    };
+
+    const fetchYearlyChartData = async (filters: ChartFilters) => {
+        try {
+            setYearlyChartLoading(true);
+            const data = await dashboardService.getChartData(filters);
+            setYearlyChartData(data);
+        } catch (err) {
+            console.error('Yearly chart data fetch error:', err);
+        } finally {
+            setYearlyChartLoading(false);
+        }
+    };
+
     const handleChartFilterReset = () => {
         setLinkType('all');
         setCreateFromDate(undefined);
         setChartCustomerName('');
         setChartLinkId('');
         // Langsung apply filter default chart
-        // fetchYearlyChartData({
-        //   chart_type: 'yearly',
-        //   link_type: 'all',
-        //   years: years
-        // });
-        // fetchWeeklyChartData({
-        //   chart_type: 'weekly',
-        //   link_type: 'all',
-        //   weeks_back: [1, 2, 3, 4]
-        // });
         fetchDailyChartData({
             chart_type: 'daily',
             link_type: 'all',
             days_back: [1, 2]
         });
+        fetchWeeklyChartData({
+            chart_type: 'weekly',
+            link_type: 'all',
+            weeks_back: [1, 2, 3, 4]
+        });
+        setTimeout(() => {
+            // Ambil 3 tahun terakhir dari current date (atau tahun sekarang jika undefined)
+            const now = createFromDate ? createFromDate : new Date();
+            const currentYear = now.getFullYear();
+            const last3Years = [currentYear - 2, currentYear - 1, currentYear];
+            fetchYearlyChartData({
+                chart_type: 'yearly',
+                link_type: 'all',
+                years: last3Years
+            });
+        }, 0);
+        // Generate ECharts option for yearly chart (similar style)
+        // const generateChartYearlyOption = (data: ChartResponse): EChartsOption => {
+        //     const legendData = data && data.series && data.series.length > 0
+        //         ? data.series.map(s => s.name)
+        //         : ["Data"];
+        //     return {
+        //         title: {
+        //             text: data.title,
+        //             left: 'center',
+        //             textStyle: {
+        //                 rich: {
+        //                     a: { fontSize: 16, fontWeight: 'bold', color: '#333', lineHeight: 30 },
+        //                     b: { fontSize: 14, color: '#666', lineHeight: 26 }
+        //                 }
+        //             }
+        //         },
+        //         tooltip: {
+        //             trigger: 'axis',
+        //             formatter: (params: unknown) => {
+        //                 type TooltipParam = {
+        //                     axisValueLabel?: string;
+        //                     axisValue?: string;
+        //                     value: number;
+        //                     color: string;
+        //                     seriesName: string;
+        //                 };
+        //                 const paramArray: TooltipParam[] = Array.isArray(params) ? params as TooltipParam[] : [params as TooltipParam];
+        //                 const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
+        //                 const lines = [`${label}`];
+        //                 for (const p of paramArray) {
+        //                     const seconds = typeof p.value === 'number' ? p.value : 0;
+        //                     const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        //                     const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        //                     const s = (seconds % 60).toString().padStart(2, '0');
+        //                     lines.push(
+        //                         `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${p.color};"></span> ${p.seriesName}: ${h}:${m}:${s}`
+        //                     );
+        //                 }
+        //                 return lines.join('<br/>');
+        //             }
+        //         },
+        //         toolbox: {
+        //             show: true,
+        //             feature: { saveAsImage: {} }
+        //         },
+        //         legend: {
+        //             show: true,
+        //             bottom: 0,
+        //             type: 'scroll',
+        //             data: legendData,
+        //         },
+        //         grid: {
+        //             top: '20%', left: '3%', right: '4%', bottom: '15%', containLabel: true,
+        //         },
+        //         xAxis: {
+        //             type: 'category', boundaryGap: true, data: data.x_axis_labels,
+        //             axisLabel: { rotate: 18, interval: 0, fontSize: 9, },
+        //         },
+        //         yAxis: {
+        //             type: 'value', name: 'Hour  ',
+        //             axisLabel: {
+        //                 formatter: (val) => {
+        //                     const h = Math.floor(val / 3600);
+        //                     return `${h}`;
+        //                 },
+        //             }
+        //         },
+        //         series: (data.series && data.series.length > 0)
+        //             ? data.series.map(series => ({
+        //                 name: series.name,
+        //                 type: 'line',
+        //                 data: series.data.map(item => {
+        //                     const [hh, mm, ss] = (item.value || "00:00:00").split(':').map(Number);
+        //                     return (hh * 3600) + (mm * 60) + ss;
+        //                 }),
+        //                 color: series.color,
+        //                 smooth: false,
+        //                 label: {
+        //                     show: true,
+        //                     fontSize: "9px",
+        //                     formatter: (params) => {
+        //                         const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
+        //                         const h = Math.floor(value / 3600).toString().padStart(2, '0');
+        //                         const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+        //                         const s = (value % 60).toString().padStart(2, '0');
+        //                         return `${h}:${m}:${s}`;
+        //                     }
+        //                 },
+        //             }))
+        //             : [{ name: 'Data', type: 'line', data: [], color: '#888', smooth: false }]
+        //     };
+        // };
+        const fetchYearlyChartData = async (filters: ChartFilters) => {
+            try {
+                setYearlyChartLoading(true);
+                const data = await dashboardService.getChartData(filters);
+                setYearlyChartData(data);
+            } catch (err) {
+                console.error('Yearly chart data fetch error:', err);
+            } finally {
+                setYearlyChartLoading(false);
+            }
+        };
     };
     // Generate ECharts option from API data (styled like TTTrendChart)
     const generateCharDailytOption = (data: ChartResponse): EChartsOption => {
@@ -157,6 +373,19 @@ const ChartSection: React.FC = () => {
                         const [hh, mm, ss] = (item.value || item.value || "00:00:00").split(':').map(Number);
                         return (hh * 3600) + (mm * 60) + ss;
                     }),
+                    label: {
+                        show: true,
+                        fontSize: "9px",    // Tampilkan label
+                        // Posisi label di atas titik
+                        formatter: (params) => {
+                            // ECharts passes value as params.value, which can be number or string
+                            const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
+                            const h = Math.floor(value / 3600).toString().padStart(2, '0');
+                            const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+                            const s = (value % 60).toString().padStart(2, '0');
+                            return `${h}:${m}:${s}`;
+                        }
+                    },
                     color: series.color,
                     smooth: false,
                 }))
@@ -279,6 +508,19 @@ const ChartSection: React.FC = () => {
                     }),
                     color: series.color,
                     smooth: false,
+                    label: {
+                        show: true,
+                        fontSize: "9px",    // Tampilkan label
+                        // Posisi label di atas titik
+                        formatter: (params) => {
+                            // ECharts passes value as params.value, which can be number or string
+                            const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
+                            const h = Math.floor(value / 3600).toString().padStart(2, '0');
+                            const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+                            const s = (value % 60).toString().padStart(2, '0');
+                            return `${h}:${m}:${s}`;
+                        }
+                    },
                 }))
                 : [{
                     name: 'Data',
@@ -320,17 +562,26 @@ const ChartSection: React.FC = () => {
     useEffect(() => {
         const filtersDaily: ChartFilters = {
             chart_type: 'daily',
-            days_back: [1, 2, 3], // Example filter for the last 7, 14, and 30 days
-            current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined // Current date in YYYY-MM-DD format
+            days_back: [1, 2, 3, 4, 5],
+            current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined
         };
         fetchDailyChartData(filtersDaily);
 
         const filtersWeekly: ChartFilters = {
             chart_type: 'weekly',
-            weeks_back: [1, 2, 3, 4, 5, 6],
+            weeks_back: [1, 2, 3, 4, 5],
             current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined
         };
         fetchWeeklyChartData(filtersWeekly);
+
+        const now = createFromDate ? createFromDate : new Date();
+        const currentYear = now.getFullYear();
+        const filtersYearly: ChartFilters = {
+            chart_type: 'yearly',
+            years: [currentYear - 2, currentYear - 1, currentYear],
+            current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined
+        };
+        fetchYearlyChartData(filtersYearly);
     }, [createFromDate]);
 
     useEffect(() => {
@@ -349,6 +600,10 @@ const ChartSection: React.FC = () => {
 
         console.log("date", createFromDate ? createFromDate.toISOString().slice(0, 10) : "undefined");
         try {
+            const now = createFromDate ? createFromDate : new Date();
+            const currentYear = now.getFullYear();
+            const last3Years = [currentYear - 2, currentYear - 1, currentYear];
+
             await Promise.all([
                 fetchDailyChartData({
                     ...baseFilters,
@@ -359,6 +614,11 @@ const ChartSection: React.FC = () => {
                     ...baseFilters,
                     chart_type: 'weekly',
                     weeks_back: [1, 2, 3, 4],
+                }),
+                fetchYearlyChartData({
+                    ...baseFilters,
+                    chart_type: 'yearly',
+                    years: last3Years,
                 })
             ]);
         } finally {
@@ -505,8 +765,6 @@ const ChartSection: React.FC = () => {
                     </div>
                 </div>
 
-
-
                 {/* Weekly Chart */}
                 <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
                     <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Weekly Trend</h4>
@@ -528,26 +786,24 @@ const ChartSection: React.FC = () => {
                 </div>
 
                 {/* Yearly Chart */}
-                {/* <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
-          <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Yearly Trend</h4>
-          <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
-            {yearlyChartData ? (
-              <div style={{ height: 250 }}>
-                <EChart option={generateChartOption(yearlyChartData)} />
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                {yearlyChartLoading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-white" />
-                ) : (
-                  <div className="text-white">No yearly data available</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div> */}
-
-
+                <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
+                    <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Yearly Trend</h4>
+                    <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
+                        {yearlyChartData ? (
+                            <div style={{ height: '100%' }}>
+                                <EChart option={generateChartYearlyOption(yearlyChartData)} />
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-64">
+                                {yearlyChartLoading ? (
+                                    <LucideLoader2 className="h-8 w-8 animate-spin text-white" />
+                                ) : (
+                                    <div className="text-white">No yearly data available</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </section>
         </>
 
