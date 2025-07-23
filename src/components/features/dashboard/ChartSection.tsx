@@ -182,12 +182,28 @@ const ChartSection: React.FC = () => {
         //     return (hh * 3600) + (mm * 60) + ss;
         // });
 
-        // console.log("seriesData", seriesData);
+        // console.log("seriesData", data);
         return {
             // backgroundColor: '#1f1f1f',
             title: {
-                text: data.title,
-                left: 'left',
+                text: data.title, // isi dari Python tadi
+                left: 'center',
+
+                textStyle: {
+                    rich: {
+                        a: {
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#333',
+                            lineHeight: 30
+                        },
+                        b: {
+                            fontSize: 14,
+                            color: '#666',
+                            lineHeight: 26
+                        }
+                    }
+                }
             },
             tooltip: {
                 trigger: 'axis',
@@ -228,6 +244,7 @@ const ChartSection: React.FC = () => {
                 data: legendData,
             },
             grid: {
+                top: '20%',
                 left: '3%',
                 right: '4%',
                 bottom: '15%',
@@ -237,7 +254,7 @@ const ChartSection: React.FC = () => {
                 type: 'category',
                 boundaryGap: true,
                 data: data.x_axis_labels,
-                axisLabel: { rotate: 70, interval: 0, fontSize: 9, },
+                axisLabel: { rotate: 18, interval: 0, fontSize: 9, },
             },
             yAxis: {
                 type: 'value',
@@ -287,14 +304,39 @@ const ChartSection: React.FC = () => {
         }
     };
 
+    const fetchWeeklyChartData = async (filters: ChartFilters) => {
+        try {
+            setWeeklyChartLoading(true);
+            const data = await dashboardService.getChartData(filters);
+
+            setWeeklyChartData(data);
+        } catch (err) {
+            console.error('Weekly chart data fetch error:', err);
+        } finally {
+            setWeeklyChartLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const filters: ChartFilters = {
+        const filtersDaily: ChartFilters = {
             chart_type: 'daily',
             days_back: [1, 2, 3], // Example filter for the last 7, 14, and 30 days
             current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined // Current date in YYYY-MM-DD format
         };
-        fetchDailyChartData(filters);
+        fetchDailyChartData(filtersDaily);
+
+        const filtersWeekly: ChartFilters = {
+            chart_type: 'weekly',
+            weeks_back: [1, 2, 3, 4, 5, 6],
+            current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined
+        };
+        fetchWeeklyChartData(filtersWeekly);
     }, [createFromDate]);
+
+    useEffect(() => {
+        console.log("weekly" + weeklyChartData)
+
+    }, [weeklyChartData]);
 
     const handleChartFilterApply = async () => {
         setChartFilterLoading(true);
@@ -308,21 +350,15 @@ const ChartSection: React.FC = () => {
         console.log("date", createFromDate ? createFromDate.toISOString().slice(0, 10) : "undefined");
         try {
             await Promise.all([
-                // fetchYearlyChartData({
-                //     ...baseFilters,
-                //     chart_type: 'yearly',
-                //     years: years
-                // }),
-                // fetchWeeklyChartData({
-                //     ...baseFilters,
-                //     chart_type: 'weekly',
-                //     weeks_back: [1, 2, 3, 4]
-                // }),
                 fetchDailyChartData({
                     ...baseFilters,
                     chart_type: 'daily',
                     days_back: [1, 2],
-
+                }),
+                fetchWeeklyChartData({
+                    ...baseFilters,
+                    chart_type: 'weekly',
+                    weeks_back: [1, 2, 3, 4],
                 })
             ]);
         } finally {
@@ -468,25 +504,7 @@ const ChartSection: React.FC = () => {
                         )}
                     </div>
                 </div>
-                {/* Daily Chart */}
-                <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
-                    <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Daily Trend</h4>
-                    <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
-                        {dailyChartData ? (
-                            <div style={{ height: '100%' }}>
-                                <EChart option={generateCharDailytOption(dailyChartData)} />
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center h-64">
-                                {dailyChartLoading ? (
-                                    <LucideLoader2 className="h-8 w-8 animate-spin text-white" />
-                                ) : (
-                                    <div className="text-white">No daily data available</div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+
 
 
                 {/* Weekly Chart */}
@@ -494,7 +512,7 @@ const ChartSection: React.FC = () => {
                     <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Weekly Trend</h4>
                     <div className="bg-gray-100 bg-opacity-30 rounded-xs p-4">
                         {weeklyChartData ? (
-                            <div style={{ height: 250 }}>
+                            <div style={{ height: '100%' }}>
                                 <EChart option={generateCharWeeklytOption(weeklyChartData)} />
                             </div>
                         ) : (
