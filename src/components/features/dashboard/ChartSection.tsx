@@ -29,98 +29,7 @@ const ChartSection: React.FC = () => {
     //     now.setHours(23, 59, 59, 59);
     //     return now;
     // });
-    // Generate ECharts option for yearly chart (similar style)
-    const generateChartYearlyOption = (data: ChartResponse): EChartsOption => {
-        const legendData = data && data.series && data.series.length > 0
-            ? data.series.map(s => s.name)
-            : ["Data"];
-        return {
-            title: {
-                text: data.title,
-                left: 'center',
-                textStyle: {
-                    rich: {
-                        a: { fontSize: 16, fontWeight: 'bold', color: '#333', lineHeight: 30 },
-                        b: { fontSize: 14, color: '#666', lineHeight: 26 }
-                    }
-                }
-            },
-            tooltip: {
-                trigger: 'axis',
-                formatter: (params: unknown) => {
-                    type TooltipParam = {
-                        axisValueLabel?: string;
-                        axisValue?: string;
-                        value: number;
-                        color: string;
-                        seriesName: string;
-                    };
-                    const paramArray: TooltipParam[] = Array.isArray(params) ? params as TooltipParam[] : [params as TooltipParam];
-                    const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
-                    const lines = [`${label}`];
-                    for (const p of paramArray) {
-                        const seconds = typeof p.value === 'number' ? p.value : 0;
-                        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-                        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-                        const s = (seconds % 60).toString().padStart(2, '0');
-                        lines.push(
-                            `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${p.color};"></span> ${p.seriesName}: ${h}:${m}:${s}`
-                        );
-                    }
-                    return lines.join('<br/>');
-                }
-            },
-            toolbox: {
-                show: true,
-                feature: { saveAsImage: {} }
-            },
-            legend: {
-                show: true,
-                bottom: 0,
-                type: 'scroll',
-                data: legendData,
-            },
-            grid: {
-                top: '20%', left: '3%', right: '4%', bottom: '15%', containLabel: true,
-            },
-            xAxis: {
-                type: 'category', boundaryGap: true, data: data.x_axis_labels,
-                axisLabel: { rotate: 18, interval: 0, fontSize: 9, },
-            },
-            yAxis: {
-                type: 'value', name: 'Hour  ',
-                axisLabel: {
-                    formatter: (val) => {
-                        const h = Math.floor(val / 3600);
-                        return `${h}`;
-                    },
-                }
-            },
-            series: (data.series && data.series.length > 0)
-                ? data.series.map(series => ({
-                    name: series.name,
-                    type: 'line',
-                    data: series.data.map(item => {
-                        const [hh, mm, ss] = (item.value || "00:00:00").split(':').map(Number);
-                        return (hh * 3600) + (mm * 60) + ss;
-                    }),
-                    color: series.color,
-                    smooth: false,
-                    label: {
-                        show: true,
-                        fontSize: "9px",
-                        formatter: (params) => {
-                            const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
-                            const h = Math.floor(value / 3600).toString().padStart(2, '0');
-                            const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
-                            const s = (value % 60).toString().padStart(2, '0');
-                            return `${h}:${m}:${s}`;
-                        }
-                    },
-                }))
-                : [{ name: 'Data', type: 'line', data: [], color: '#888', smooth: false }]
-        };
-    };
+
 
     const fetchYearlyChartData = async (filters: ChartFilters) => {
         try {
@@ -143,7 +52,7 @@ const ChartSection: React.FC = () => {
         fetchDailyChartData({
             chart_type: 'daily',
             link_type: 'all',
-            days_back: [1, 2]
+            days_back: [1, 2, 3, 4, 5]
         });
         fetchWeeklyChartData({
             chart_type: 'weekly',
@@ -274,11 +183,12 @@ const ChartSection: React.FC = () => {
 
         // const seriesData = data.series[0].data.map(item => {
         //     // Konversi value hh:mm:ss menjadi total detik
-        //     const [hh, mm, ss] = item.value.split(':').map(Number);
-        //     return (hh * 3600) + (mm * 60) + ss;
+        //     // const [hh, mm, ss] = item.value.split(':').map(Number);
+        //     return item.value
         // });
 
         // console.log("seriesData", seriesData);
+        console.log("ini asli" + createFromDate)
         return {
             // backgroundColor: '#1f1f1f',
             title: {
@@ -294,9 +204,9 @@ const ChartSection: React.FC = () => {
                             lineHeight: 30
                         },
                         b: {
-                            fontSize: 14,
+                            fontSize: 12,
                             color: '#666',
-                            lineHeight: 26
+                            lineHeight: 10
                         }
                     }
                 }
@@ -340,7 +250,7 @@ const ChartSection: React.FC = () => {
                 data: legendData,
             },
             grid: {
-                top: '20%',
+                top: '25%',
                 left: '3%',
                 right: '4%',
                 bottom: '15%',
@@ -427,9 +337,9 @@ const ChartSection: React.FC = () => {
                             lineHeight: 30
                         },
                         b: {
-                            fontSize: 14,
+                            fontSize: 12,
                             color: '#666',
-                            lineHeight: 26
+                            lineHeight: 10
                         }
                     }
                 }
@@ -473,7 +383,7 @@ const ChartSection: React.FC = () => {
                 data: legendData,
             },
             grid: {
-                top: '20%',
+                top: '25%',
                 left: '3%',
                 right: '4%',
                 bottom: '15%',
@@ -532,6 +442,108 @@ const ChartSection: React.FC = () => {
         };
     };
 
+    // Generate ECharts option for yearly chart (similar style)
+    const generateChartYearlyOption = (data: ChartResponse): EChartsOption => {
+        const legendData = data && data.series && data.series.length > 0
+            ? data.series.map(s => s.name)
+            : ["Data"];
+        return {
+            title: {
+                text: data.title,
+                left: 'center',
+                textStyle: {
+                    rich: {
+                        a: {
+                            fontSize: 16,
+                            fontWeight: 'bold',
+                            color: '#333',
+                            lineHeight: 30
+                        },
+                        b: {
+                            fontSize: 12,
+                            color: '#666',
+                            lineHeight: 10
+                        }
+                    }
+                }
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: (params: unknown) => {
+                    type TooltipParam = {
+                        axisValueLabel?: string;
+                        axisValue?: string;
+                        value: number;
+                        color: string;
+                        seriesName: string;
+                    };
+                    const paramArray: TooltipParam[] = Array.isArray(params) ? params as TooltipParam[] : [params as TooltipParam];
+                    const label = paramArray[0]?.axisValueLabel || paramArray[0]?.axisValue || '';
+                    const lines = [`${label}`];
+                    for (const p of paramArray) {
+                        const seconds = typeof p.value === 'number' ? p.value : 0;
+                        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                        const s = (seconds % 60).toString().padStart(2, '0');
+                        lines.push(
+                            `<span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background:${p.color};"></span> ${p.seriesName}: ${h}:${m}:${s}`
+                        );
+                    }
+                    return lines.join('<br/>');
+                }
+            },
+            toolbox: {
+                show: true,
+                feature: { saveAsImage: {} }
+            },
+            legend: {
+                show: true,
+                bottom: 0,
+                type: 'scroll',
+                data: legendData,
+            },
+            grid: {
+                top: '25%', left: '3%', right: '4%', bottom: '15%', containLabel: true,
+            },
+            xAxis: {
+                type: 'category', boundaryGap: true, data: data.x_axis_labels,
+                axisLabel: { rotate: 18, interval: 0, fontSize: 9, },
+            },
+            yAxis: {
+                type: 'value', name: 'Hour  ',
+                axisLabel: {
+                    formatter: (val) => {
+                        const h = Math.floor(val / 3600);
+                        return `${h}`;
+                    },
+                }
+            },
+            series: (data.series && data.series.length > 0)
+                ? data.series.map(series => ({
+                    name: series.name,
+                    type: 'line',
+                    data: series.data.map(item => {
+                        const [hh, mm, ss] = (item.value || "00:00:00").split(':').map(Number);
+                        return (hh * 3600) + (mm * 60) + ss;
+                    }),
+                    color: series.color,
+                    smooth: false,
+                    label: {
+                        show: true,
+                        fontSize: "9px",
+                        formatter: (params) => {
+                            const value = typeof params.value === 'number' ? params.value : Number(params.value) || 0;
+                            const h = Math.floor(value / 3600).toString().padStart(2, '0');
+                            const m = Math.floor((value % 3600) / 60).toString().padStart(2, '0');
+                            const s = (value % 60).toString().padStart(2, '0');
+                            return `${h}:${m}:${s}`;
+                        }
+                    },
+                }))
+                : [{ name: 'Data', type: 'line', data: [], color: '#888', smooth: false }]
+        };
+    };
+
     const fetchDailyChartData = async (filters: ChartFilters) => {
         try {
             setDailyChartLoading(true);
@@ -582,7 +594,7 @@ const ChartSection: React.FC = () => {
             current_date: createFromDate ? createFromDate.toISOString().slice(0, 10) : undefined
         };
         fetchYearlyChartData(filtersYearly);
-    }, [createFromDate]);
+    }, []);
 
     useEffect(() => {
         console.log("weekly" + weeklyChartData)
@@ -595,10 +607,9 @@ const ChartSection: React.FC = () => {
             link_type: linkType,
             ...(chartCustomerName && { customer_name: chartCustomerName }),
             ...(chartLinkId && { link_id: chartLinkId }),
-            ...(createFromDate ? { current_date: createFromDate.toISOString().slice(0, 10) } : {}),
+            ...(createFromDate ? { current_date: `${createFromDate.getFullYear()}-${(createFromDate.getMonth() + 1).toString().padStart(2, '0')}-${createFromDate.getDate().toString().padStart(2, '0')}` } : {}),
         };
 
-        console.log("date", createFromDate ? createFromDate.toISOString().slice(0, 10) : "undefined");
         try {
             const now = createFromDate ? createFromDate : new Date();
             const currentYear = now.getFullYear();
@@ -608,17 +619,18 @@ const ChartSection: React.FC = () => {
                 fetchDailyChartData({
                     ...baseFilters,
                     chart_type: 'daily',
-                    days_back: [1, 2],
+                    days_back: [1, 2, 3, 4, 5],
                 }),
                 fetchWeeklyChartData({
                     ...baseFilters,
                     chart_type: 'weekly',
-                    weeks_back: [1, 2, 3, 4],
+                    weeks_back: [1, 2, 3, 4, 5],
                 }),
                 fetchYearlyChartData({
                     ...baseFilters,
                     chart_type: 'yearly',
                     years: last3Years,
+                    ...(chartCustomerName && { customer_name: chartCustomerName }),
                 })
             ]);
         } finally {
@@ -631,30 +643,11 @@ const ChartSection: React.FC = () => {
             <section className="pt-4 px-0 space-y-4">
 
                 <div className="flex flex-wrap  gap-4">
-
-                    <div className="space-y-2 min-w-[180px]">
-
-                        <Label htmlFor="link-type" className="text-sm font-medium text-white">
-                            Link Type
-                        </Label>
-                        <Select value={linkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setLinkType(value)}>
-                            <SelectTrigger className="w-full min-w-[180px] bg-background">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="enterprise">Enterprise</SelectItem>
-                                <SelectItem value="wholesale">Partnership</SelectItem>
-                            </SelectContent>
-                        </Select>
-
-
-                    </div>
                     <div className="space-y-2">
                         <Label htmlFor="link-type" className="text-sm font-medium text-white">
-                            Set Current Date
+                            Set End Date
                         </Label>
-                        <div className="flex items-center gap-2 w-full">
+                        <div className="flex items-center gap-2 w-full pt-1">
 
                             <DateTimePicker
                                 value={createFromDate}
@@ -671,18 +664,43 @@ const ChartSection: React.FC = () => {
                             /> */}
                         </div>
                     </div>
+                    <div className="space-y-2 min-w-[180px]">
+
+                        <Label htmlFor="link-type" className="text-sm font-medium text-white">
+                            Link Type
+                        </Label>
+                        <div className='pt-1'>
+                            <Select value={linkType} onValueChange={(value: 'enterprise' | 'wholesale' | 'all') => setLinkType(value)}>
+                                <SelectTrigger className="w-full min-w-[180px] bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                                    <SelectItem value="wholesale">Partnership</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+
+
+                    </div>
+
 
                     <div className="space-y-2">
                         <Label htmlFor="chart-customer-name" className="text-sm font-medium text-white">
                             Customer Name
                         </Label>
-                        <AsyncPaginateSelect
-                            value={chartCustomerName ? { label: chartCustomerName, value: chartCustomerName } : null}
-                            onChange={(option) => setChartCustomerName(option ? option.value : '')}
-                            loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
-                            placeholder="Customer Name"
-                            debounceTimeout={400}
-                        />
+                        <div className='pt-1'>
+                            <AsyncPaginateSelect
+                                value={chartCustomerName ? { label: chartCustomerName, value: chartCustomerName } : null}
+                                onChange={(option) => setChartCustomerName(option ? option.value : '')}
+                                loadOptions={createLoadOptions<{ label: string; value: string }>('http://localhost:8000/search/customer-name')}
+                                placeholder="Customer Name"
+                                debounceTimeout={400}
+                            />
+                        </div>
+
 
                     </div>
 
@@ -690,7 +708,7 @@ const ChartSection: React.FC = () => {
                         <Label htmlFor="link-id" className="text-sm font-medium text-white">
                             Link ID
                         </Label>
-                        <div className='flex items-center gap-4 w-full'>
+                        <div className='flex items-center gap-4 w-full pt-1'>
                             <AsyncPaginateSelect
                                 key={chartCustomerName || 'no-customer'}
                                 value={chartLinkId ? { label: chartLinkId, value: chartLinkId } : null}
@@ -744,7 +762,7 @@ const ChartSection: React.FC = () => {
 
             </section >
 
-            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Daily Chart */}
                 <div className="bg-gradient-to-br from-[#1a1939] to-[#806720] border border-[#164396] rounded-lg p-3 pt-0 mb-3 space-y-3 text-white">
                     <h4 className="bg-[#164396] text-white text-xl font-semibold text-center w-1/2 py-2 rounded-b-2xl mb-3 mx-auto shadow-xl/30">Daily Trend</h4>

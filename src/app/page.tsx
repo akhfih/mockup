@@ -218,7 +218,7 @@ const DashboardContent = () => {
         ? `${createEndDate.getFullYear()}-${String(createEndDate.getMonth() + 1).padStart(2, '0')}-${String(createEndDate.getDate()).padStart(2, '0')} ${createEndTime ? format(createEndTime, 'HH:mm:ss') : '23:59:59'}`
         : undefined;
 
-      alert(create_from + " " + create_end);
+      // alert(create_from + " " + create_end);
       await fetchDashboardData({
         // time_filter: timeFilter,
         create_from,
